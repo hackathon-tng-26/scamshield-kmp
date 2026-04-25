@@ -19,6 +19,8 @@ class HttpClientFactory(
     private val logger: Logger,
 ) {
     fun create(): HttpClient = HttpClient {
+        expectSuccess = true
+
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
@@ -48,7 +50,7 @@ class HttpClientFactory(
                     this@HttpClientFactory.logger.debug(message, "HTTP")
                 }
             }
-            level = LogLevel.HEADERS
+            level = LogLevel.BODY
         }
 
         defaultRequest {

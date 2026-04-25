@@ -10,7 +10,9 @@ import my.scamshield.feature.transfer.presentation.compose.TransferComposeViewMo
 import my.scamshield.feature.transfer.presentation.confirm.TransferConfirmViewModel
 import org.koin.dsl.module
 
-const val USE_FAKE_TRANSFER_REPO = true
+const val USE_FAKE_TRANSFER_REPO = false
+const val DEMO_FALLBACK_ON_EXECUTE_FAILURE = true
+const val DEMO_FALLBACK_ON_SCORE_FAILURE = true
 
 val transferModule = module {
     single { TransferRemoteDataSource(get()) }
@@ -19,7 +21,7 @@ val transferModule = module {
         if (USE_FAKE_TRANSFER_REPO) {
             FakeTransferRepository()
         } else {
-            TransferRepositoryImpl(get(), get(), get())
+            TransferRepositoryImpl(get(), get(), get(), FakeTransferRepository())
         }
     }
 

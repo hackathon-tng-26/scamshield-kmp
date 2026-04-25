@@ -50,8 +50,8 @@ class FakeTransferRepository : TransferRepository {
         val phone = tx.recipient.phone
         return when {
             phone.contains("8712") -> 87
-            phone.contains("4001") -> 91
-            phone.contains("4421") -> 87
+            phone.contains("0022") -> 55
+            phone.contains("6789") -> 18
             tx.recipient.isInContacts -> (15..25).random()
             tx.amount >= 1_000.0 -> (55..65).random()
             else -> (18..30).random()
