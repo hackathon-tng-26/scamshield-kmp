@@ -1,7 +1,22 @@
 package my.scamshield.feature.home.presentation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -27,16 +43,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,8 +70,17 @@ import kotlin.time.Instant
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import io.github.alexzhirkevich.compottie.LottieCompositionSpec
+import io.github.alexzhirkevich.compottie.animateLottieCompositionAsState
+import io.github.alexzhirkevich.compottie.rememberLottieComposition
+import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import my.scamshield.core.domain.util.AppClock
+import my.scamshield.core.presentation.component.animatedTraceBorder
 import my.scamshield.core.presentation.i18n.localeText
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.painterResource
+import scamshield.composeapp.generated.resources.Res
+import scamshield.composeapp.generated.resources.ic_scan_qr
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.theme.SafeGreen
@@ -132,22 +160,66 @@ class HomeScreen : Screen {
                 Spacer(Modifier.height(12.dp))
 
                 val blockedCount = activity.count { it.kind == ActivityKind.BLOCKED }
+                val cardShape = RoundedCornerShape(16.dp)
+                var traceTarget by remember { mutableStateOf(0f) }
+                var traceComplete by remember { mutableStateOf(false) }
+                var countUpTrigger by remember { mutableStateOf(false) }
+                val traceProgress by animateFloatAsState(
+                    targetValue = traceTarget,
+                    animationSpec = tween(
+                        durationMillis = 2000,
+                        easing = FastOutSlowInEasing,
+                    ),
+                    finishedListener = { if (it >= 1f) traceComplete = true },
+                    label = "scamShieldBorderTrace",
+                )
+                val animatedBlockedCount by animateIntAsState(
+                    targetValue = if (countUpTrigger) blockedCount else 0,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessLow,
+                    ),
+                    label = "scamShieldBlockedCount",
+                )
+                LaunchedEffect(Unit) {
+                    traceTarget = 1f
+                }
                 Card(
                     onClick = { navigator.push(BlockedListScreen()) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animatedTraceBorder(
+                            progress = traceProgress,
+                            color = SafeGreen,
+                            width = 2.5.dp,
+                            shape = cardShape,
+                        ),
                     colors = CardDefaults.cardColors(containerColor = SafeGreenBg),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = cardShape,
                 ) {
                     Row(
                         modifier = Modifier.padding(20.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = null,
-                            tint = SafeGreen,
-                            modifier = Modifier.size(36.dp),
-                        )
+                        Box(
+                            modifier = Modifier.size(44.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (traceComplete) {
+                                ScamShieldLottieIcon(
+                                    modifier = Modifier.size(44.dp),
+                                    triggerProgress = 0.30f,
+                                    onTrigger = { countUpTrigger = true },
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Shield,
+                                    contentDescription = null,
+                                    tint = SafeGreen,
+                                    modifier = Modifier.size(36.dp),
+                                )
+                            }
+                        }
                         Spacer(Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -158,12 +230,24 @@ class HomeScreen : Screen {
                             )
                             Spacer(Modifier.height(2.dp))
                             Row(verticalAlignment = Alignment.Bottom) {
-                                Text(
-                                    text = "$blockedCount",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                )
+                                AnimatedContent(
+                                    targetState = animatedBlockedCount,
+                                    transitionSpec = {
+                                        (slideInVertically(tween(150)) { it / 6 } + fadeIn(tween(150)))
+                                            .togetherWith(
+                                                slideOutVertically(tween(150)) { -it / 6 } + fadeOut(tween(150)),
+                                            )
+                                            .using(SizeTransform(clip = false))
+                                    },
+                                    label = "scamShieldBlockedCountSlide",
+                                ) { count ->
+                                    Text(
+                                        text = "$count",
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                    )
+                                }
                                 Spacer(Modifier.width(8.dp))
                                 Text(
                                     text = localeText(
@@ -218,20 +302,29 @@ class HomeScreen : Screen {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val scanSoonMsg = localeText(
                         bm = "Imbas untuk bayar akan datang",
                         en = "Scan to pay coming soon",
                     )
-                    OutlinedButton(
+                    val scanLabel = localeText(bm = "Imbas QR", en = "Scan QR")
+                    Surface(
                         onClick = {
                             scope.launch { snackbarHost.showSnackbar(scanSoonMsg) }
                         },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(56.dp),
                     ) {
-                        Text(localeText(bm = "Imbas QR", en = "Scan QR"))
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_scan_qr),
+                            contentDescription = scanLabel,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .padding(14.dp)
+                                .size(28.dp),
+                        )
                     }
                     Button(
                         onClick = { navigator.push(TransferComposeScreen()) },
@@ -239,7 +332,7 @@ class HomeScreen : Screen {
                             containerColor = MaterialTheme.colorScheme.primary,
                         ),
                         modifier = Modifier
-                            .weight(2f)
+                            .weight(1f)
                             .height(56.dp),
                     ) {
                         Icon(
@@ -332,6 +425,35 @@ private fun ActivityRow(item: ActivityItem, now: Instant) {
             )
         }
     }
+}
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+private fun ScamShieldLottieIcon(
+    modifier: Modifier = Modifier,
+    triggerProgress: Float = 1f,
+    onTrigger: () -> Unit = {},
+) {
+    val composition by rememberLottieComposition {
+        val bytes = Res.readBytes("files/security_safe.json")
+        LottieCompositionSpec.JsonString(bytes.decodeToString())
+    }
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = 1,
+    )
+    var notified by remember { mutableStateOf(false) }
+    LaunchedEffect(progress) {
+        if (progress >= triggerProgress && !notified) {
+            notified = true
+            onTrigger()
+        }
+    }
+    Image(
+        painter = rememberLottiePainter(composition = composition, progress = { progress }),
+        contentDescription = null,
+        modifier = modifier,
+    )
 }
 
 private fun greetingFor(now: Instant): Pair<String, String> {
