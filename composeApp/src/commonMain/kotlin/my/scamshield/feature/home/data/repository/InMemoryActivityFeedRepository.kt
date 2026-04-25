@@ -82,7 +82,7 @@ class InMemoryActivityFeedRepository(
         val now = clock.now()
         val blocked = listOf(
             Triple("+60 13-XXXX 4421 · Akaun keldai", 850.0, 5.days),
-            Triple("+60 17-XXXX 8899 · Macau Scam pattern", 3500.0, 2.days),
+            Triple("+60 17-XXXX 8899 · Polis tiruan (Macau Scam)", 3500.0, 2.days),
             Triple("+60 11-XXXX 2233 · Pelaburan palsu", 1200.0, 4.days),
             Triple("+60 12-XXXX 9988 · Sahkan akaun (impersonation)", 450.0, 7.days),
             Triple("+60 16-XXXX 5544 · Tipuan kerja online", 680.0, 9.days),
@@ -90,7 +90,7 @@ class InMemoryActivityFeedRepository(
             Triple("+60 19-XXXX 1122 · Akaun keldai", 2100.0, 14.days),
             Triple("+60 14-XXXX 3344 · Pelaburan crypto palsu", 5000.0, 17.days),
             Triple("+60 12-XXXX 6677 · Tipuan pinjaman", 900.0, 20.days),
-            Triple("+60 17-XXXX 9911 · Macau Scam pattern", 4200.0, 23.days),
+            Triple("+60 17-XXXX 9911 · Polis tiruan (Macau Scam)", 4200.0, 23.days),
             Triple("+60 11-XXXX 4488 · Akaun keldai", 1750.0, 27.days),
         )
         return buildList {

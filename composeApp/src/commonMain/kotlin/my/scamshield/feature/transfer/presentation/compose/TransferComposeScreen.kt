@@ -195,12 +195,14 @@ class TransferComposeScreen : Screen {
                 val parsedAmount = state.amountRm.toDoubleOrNull()
                 Button(
                     onClick = {
-                        val recipientName = state.resolvedName ?: state.recipientPhone
-                        val isContact = viewModel.contacts.any {
+                        val matchedContact = viewModel.contacts.firstOrNull {
                             it.phone.filter { c -> c.isDigit() } ==
-                                state.recipientPhone.filter { c -> c.isDigit() } &&
-                                it.trust == TrustLevel.GREEN
+                                state.recipientPhone.filter { c -> c.isDigit() }
                         }
+                        val recipientName = matchedContact?.displayName
+                            ?: state.resolvedName
+                            ?: state.recipientPhone
+                        val isContact = matchedContact?.trust == TrustLevel.GREEN
                         val recipient = Recipient(
                             id = state.recipientPhone,
                             displayName = recipientName,

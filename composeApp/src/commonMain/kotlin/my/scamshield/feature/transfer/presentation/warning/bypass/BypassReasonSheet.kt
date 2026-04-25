@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import my.scamshield.core.presentation.component.BilingualLabel
@@ -67,8 +68,8 @@ enum class BypassReason(val labelBm: String, val labelEn: String, val warningBm:
     JOB_LOAN(
         labelBm = "Tawaran kerja atau pinjaman",
         labelEn = "Job or loan offer",
-        warningBm = "Pekerjaan dan pinjaman sah tidak minta bayaran dahulu. Jika diminta bayar untuk dapatkan kerja/pinjaman, ini adalah tipuan.",
-        warningEn = "Real jobs and loans don't ask for upfront payment. If you're asked to pay first to get a job or loan, this is a scam.",
+        warningBm = "Pekerjaan dan pinjaman sah tidak minta bayaran dahulu. Jika diminta bayar untuk dapatkan kerja/pinjaman, ini adalah tipuan. Hentikan perbualan dan call NSRC 997.",
+        warningEn = "Real jobs and loans don't ask for upfront payment. If you're asked to pay first to get a job or loan, this is a scam. Stop the chat and call NSRC 997.",
     ),
     AUTHORITY(
         labelBm = "Polis atau bank suruh saya",
@@ -231,7 +232,7 @@ private fun ReflectContent(
         onClick = onBack,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text("Go back")
+        BilingualLabel(bm = "Kembali", en = "Go back")
     }
 }
 
@@ -246,15 +247,25 @@ private fun TypeConfirmContent(
     val matches = typed.trim().uppercase() == CONFIRM_PHRASE
 
     Text(
-        text = "Last step",
+        text = "Langkah terakhir",
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
     )
+    Text(
+        text = "Last step",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+    )
     Spacer(Modifier.height(8.dp))
     Text(
-        text = "Type SAYA FAHAM to confirm you understand the risk:",
+        text = "Taip SAYA FAHAM untuk sahkan anda faham risiko:",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface,
+    )
+    Text(
+        text = "Type SAYA FAHAM to confirm you understand the risk:",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
     )
     Spacer(Modifier.height(12.dp))
     OutlinedTextField(
@@ -264,8 +275,9 @@ private fun TypeConfirmContent(
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Characters,
             autoCorrect = false,
-            keyboardType = KeyboardType.Ascii,
+            keyboardType = KeyboardType.Password,
         ),
+        visualTransformation = VisualTransformation.None,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -305,10 +317,10 @@ private fun TypeConfirmContent(
         onClick = onBack,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text("Go back")
+        BilingualLabel(bm = "Kembali", en = "Go back")
     }
     Text(
-        text = "Reason logged: ${reason.labelEn}",
+        text = "Sebab direkod: ${reason.labelBm} · ${reason.labelEn}",
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),

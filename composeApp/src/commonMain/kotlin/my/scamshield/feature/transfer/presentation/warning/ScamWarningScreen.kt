@@ -177,17 +177,22 @@ class ScamWarningScreen(
                         enabled = bypassEnabled,
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                     ) {
-                        Text(
-                            text = if (bypassEnabled) {
-                                "I still want to proceed"
-                            } else {
-                                "I still want to proceed (wait ${coolingSecondsLeft}s)"
-                            },
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(
-                                alpha = if (bypassEnabled) 0.5f else 0.3f,
-                            ),
-                        )
+                        val alpha = if (bypassEnabled) 0.5f else 0.3f
+                        val labelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = alpha)
+                        val bm = if (bypassEnabled) {
+                            "Saya masih nak teruskan"
+                        } else {
+                            "Saya masih nak teruskan (tunggu ${coolingSecondsLeft}s)"
+                        }
+                        val en = if (bypassEnabled) {
+                            "I still want to proceed"
+                        } else {
+                            "I still want to proceed (wait ${coolingSecondsLeft}s)"
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(bm, style = MaterialTheme.typography.labelMedium, color = labelColor, fontWeight = FontWeight.Medium)
+                            Text(en, style = MaterialTheme.typography.labelSmall, color = labelColor)
+                        }
                     }
                 }
             }
