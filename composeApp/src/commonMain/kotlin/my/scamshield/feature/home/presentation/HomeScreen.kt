@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -55,6 +56,8 @@ import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.theme.SafeGreen
 import my.scamshield.core.presentation.theme.SafeGreenBg
+import my.scamshield.core.presentation.theme.WarnOrange
+import my.scamshield.core.presentation.theme.WarnOrangeBg
 import my.scamshield.core.presentation.util.toRmAmount
 import my.scamshield.feature.auth.domain.repository.SessionRepository
 import my.scamshield.feature.home.domain.model.ActivityItem
@@ -250,9 +253,22 @@ class HomeScreen : Screen {
 @Composable
 private fun ActivityRow(item: ActivityItem, now: Instant) {
     val isBlocked = item.kind == ActivityKind.BLOCKED
-    val rowBg = if (isBlocked) AlertRedBg else Color.Transparent
-    val icon = if (isBlocked) Icons.Default.Block else Icons.Default.CheckCircle
-    val iconTint = if (isBlocked) AlertRed else SafeGreen
+    val isHeld = item.kind == ActivityKind.HELD
+    val rowBg = when {
+        isBlocked -> AlertRedBg
+        isHeld -> WarnOrangeBg
+        else -> Color.Transparent
+    }
+    val icon = when {
+        isBlocked -> Icons.Default.Block
+        isHeld -> Icons.Default.Schedule
+        else -> Icons.Default.CheckCircle
+    }
+    val iconTint = when {
+        isBlocked -> AlertRed
+        isHeld -> WarnOrange
+        else -> SafeGreen
+    }
 
     Row(
         modifier = Modifier

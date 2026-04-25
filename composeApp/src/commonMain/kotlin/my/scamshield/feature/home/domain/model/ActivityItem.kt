@@ -8,6 +8,7 @@ import kotlin.time.Instant
 enum class ActivityKind {
     SENT,
     BLOCKED,
+    HELD,
 }
 
 data class ActivityItem(
@@ -17,6 +18,7 @@ data class ActivityItem(
     val subtitle: String,
     val amount: Double?,
     val timestamp: Instant,
+    val bypassedWarning: Boolean = false,
 )
 
 fun relativeTime(now: Instant, then: Instant): String {

@@ -29,6 +29,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +49,9 @@ import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.util.toRmAmount
 import my.scamshield.core.platform.Caller
 import my.scamshield.feature.home.domain.repository.ActivityFeedRepository
+import my.scamshield.feature.transfer.domain.usecase.ExecuteTransferUseCase
+import my.scamshield.feature.transfer.presentation.success.TransferSuccessScreen
+import my.scamshield.feature.transfer.presentation.warning.bypass.BypassReasonSheet
 import my.scamshield.feature.home.presentation.HomeScreen
 import my.scamshield.feature.transfer.domain.model.RiskScore
 import my.scamshield.feature.transfer.domain.model.Transaction
@@ -62,6 +67,9 @@ class ScamWarningScreen(
         val navigator = LocalNavigator.currentOrThrow
         val activityFeed: ActivityFeedRepository = koinInject()
         val caller: Caller = koinInject()
+        val executeTransfer: ExecuteTransferUseCase = koinInject()
+        val scope = rememberCoroutineScope()
+        var showBypassSheet by remember { mutableStateOf(false) }
 
         var coolingSecondsLeft by remember { mutableStateOf(BYPASS_COOLING_SEC) }
         LaunchedEffect(Unit) {
@@ -139,10 +147,24 @@ class ScamWarningScreen(
                             fontWeight = FontWeight.Bold,
                         )
                     }
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(2.dp))
+                    TextButton(
+                        onClick = {
+                            activityFeed.recordHeld(transaction)
+                            navigator.replaceAll(HomeScreen())
+                        },
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    ) {
+                        Text(
+                            text = "Hold for 24h — let me check with someone",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
                     val bypassEnabled = coolingSecondsLeft == 0
                     TextButton(
-                        onClick = { navigator.replaceAll(HomeScreen()) },
+                        onClick = { showBypassSheet = true },
                         enabled = bypassEnabled,
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                     ) {
@@ -160,6 +182,24 @@ class ScamWarningScreen(
                     }
                 }
             }
+        }
+
+        if (showBypassSheet) {
+            BypassReasonSheet(
+                onDismiss = { showBypassSheet = false },
+                onConfirm = { _ ->
+                    showBypassSheet = false
+                    scope.launch {
+                        val result = executeTransfer(transaction)
+                        result.onSuccess { txId ->
+                            activityFeed.recordSent(transaction, txId, bypassedWarning = true)
+                            navigator.replaceAll(TransferSuccessScreen(transaction, txId))
+                        }.onFailure {
+                            navigator.replaceAll(HomeScreen())
+                        }
+                    }
+                },
+            )
         }
     }
 

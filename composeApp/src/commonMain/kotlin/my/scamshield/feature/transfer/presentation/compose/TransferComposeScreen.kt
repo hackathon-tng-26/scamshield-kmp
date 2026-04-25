@@ -59,9 +59,11 @@ import my.scamshield.core.presentation.theme.SafeGreenBg
 import my.scamshield.core.presentation.theme.WarnOrange
 import my.scamshield.core.presentation.theme.WarnOrangeBg
 import my.scamshield.core.presentation.util.toRmAmount
+import my.scamshield.feature.home.domain.repository.ActivityFeedRepository
 import my.scamshield.feature.transfer.domain.model.Recipient
 import my.scamshield.feature.transfer.domain.model.Transaction
 import my.scamshield.feature.transfer.presentation.confirm.TransferConfirmScreen
+import org.koin.compose.koinInject
 
 private val PURPOSE_OPTIONS = listOf(
     "Family or friend",
@@ -85,7 +87,10 @@ class TransferComposeScreen : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel: TransferComposeViewModel = koinScreenModel()
+        val activityFeed: ActivityFeedRepository = koinInject()
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val holds by activityFeed.holdsByPhone.collectAsStateWithLifecycle()
+        val isHeld = state.recipientPhone.isNotBlank() && holds.containsKey(state.recipientPhone)
 
         Scaffold(
             topBar = {
@@ -177,6 +182,16 @@ class TransferComposeScreen : Screen {
 
                 Spacer(Modifier.weight(1f))
 
+                if (isHeld) {
+                    Text(
+                        text = "On hold until tomorrow — you said you'd check with someone first",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                }
+
                 val parsedAmount = state.amountRm.toDoubleOrNull()
                 Button(
                     onClick = {
@@ -203,7 +218,7 @@ class TransferComposeScreen : Screen {
                         )
                         navigator.push(TransferConfirmScreen(transaction))
                     },
-                    enabled = state.isValid,
+                    enabled = state.isValid && !isHeld,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                     ),
