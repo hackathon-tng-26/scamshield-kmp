@@ -45,8 +45,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
-import my.scamshield.core.presentation.component.BilingualLabel
 import my.scamshield.core.presentation.component.LocaleToggle
+import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.theme.WarnOrange
@@ -101,7 +101,10 @@ class ScamWarningScreen(
                     Spacer(Modifier.height(16.dp))
 
                     Text(
-                        text = "Kenapa kami tanya:",
+                        text = localeText(
+                            bm = "Kenapa kami tanya:",
+                            en = "Why we're asking:",
+                        ),
                         style = MaterialTheme.typography.titleMedium,
                         color = Color(0xFF7A0F19),
                         fontWeight = FontWeight.Bold,
@@ -126,9 +129,13 @@ class ScamWarningScreen(
                             .fillMaxWidth()
                             .height(64.dp),
                     ) {
-                        BilingualLabel(
-                            bm = "Ya, batalkan — saya tak kenal",
-                            en = "Yes, cancel — I don't know them",
+                        Text(
+                            text = localeText(
+                                bm = "Ya, batalkan — saya tak kenal",
+                                en = "Yes, cancel — I don't know them",
+                            ),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
                         )
                     }
                     Spacer(Modifier.height(10.dp))
@@ -145,9 +152,13 @@ class ScamWarningScreen(
                             modifier = Modifier.height(20.dp),
                         )
                         Spacer(Modifier.padding(horizontal = 4.dp))
-                        BilingualLabel(
-                            bm = "Hubungi NSRC 997",
-                            en = "Call National Scam Response Centre",
+                        Text(
+                            text = localeText(
+                                bm = "Hubungi NSRC 997",
+                                en = "Call NSRC 997",
+                            ),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                     Spacer(Modifier.height(10.dp))
@@ -167,9 +178,13 @@ class ScamWarningScreen(
                             modifier = Modifier.height(20.dp),
                         )
                         Spacer(Modifier.padding(horizontal = 4.dp))
-                        BilingualLabel(
-                            bm = "Tahan 24 jam — saya semak dulu",
-                            en = "Hold for 24h — let me check first",
+                        Text(
+                            text = localeText(
+                                bm = "Tahan 24 jam — saya semak dulu",
+                                en = "Hold for 24h — let me check first",
+                            ),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                     val bypassEnabled = coolingSecondsLeft == 0
@@ -180,20 +195,23 @@ class ScamWarningScreen(
                     ) {
                         val alpha = if (bypassEnabled) 0.5f else 0.3f
                         val labelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = alpha)
-                        val bm = if (bypassEnabled) {
-                            "Saya masih nak teruskan"
+                        val label = if (bypassEnabled) {
+                            localeText(
+                                bm = "Saya masih nak teruskan",
+                                en = "I still want to proceed",
+                            )
                         } else {
-                            "Saya masih nak teruskan (tunggu ${coolingSecondsLeft}s)"
+                            localeText(
+                                bm = "Saya masih nak teruskan (tunggu ${coolingSecondsLeft}s)",
+                                en = "I still want to proceed (wait ${coolingSecondsLeft}s)",
+                            )
                         }
-                        val en = if (bypassEnabled) {
-                            "I still want to proceed"
-                        } else {
-                            "I still want to proceed (wait ${coolingSecondsLeft}s)"
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(bm, style = MaterialTheme.typography.labelMedium, color = labelColor, fontWeight = FontWeight.Medium)
-                            Text(en, style = MaterialTheme.typography.labelSmall, color = labelColor)
-                        }
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = labelColor,
+                            fontWeight = FontWeight.Medium,
+                        )
                     }
                 }
             }
@@ -239,19 +257,16 @@ private fun HeaderBar() {
             tint = Color.White,
             modifier = Modifier.height(28.dp),
         )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Awak pasti kenal orang ini?",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = "Are you sure you know this person?",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White,
-            )
-        }
+        Text(
+            text = localeText(
+                bm = "Awak pasti kenal orang ini?",
+                en = "Are you sure you know this person?",
+            ),
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+        )
         LocaleToggle(onDark = true)
     }
 }
@@ -266,7 +281,10 @@ private fun TransactionSummaryCard(transaction: Transaction) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "You were about to send",
+                text = localeText(
+                    bm = "Anda hampir hantar",
+                    en = "You were about to send",
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
@@ -279,7 +297,10 @@ private fun TransactionSummaryCard(transaction: Transaction) {
             Spacer(Modifier.height(4.dp))
             if (recipient.verifiedName != null) {
                 Text(
-                    text = "to  ${recipient.verifiedName}",
+                    text = localeText(
+                        bm = "kepada  ${recipient.verifiedName}",
+                        en = "to  ${recipient.verifiedName}",
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Medium,
@@ -291,19 +312,28 @@ private fun TransactionSummaryCard(transaction: Transaction) {
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "✓ verified · DuitNow",
+                    text = localeText(
+                        bm = "✓ disahkan · DuitNow",
+                        en = "✓ verified · DuitNow",
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
             } else {
                 Text(
-                    text = "to  ${recipient.phone}  (new recipient)",
+                    text = localeText(
+                        bm = "kepada  ${recipient.phone}  (penerima baharu)",
+                        en = "to  ${recipient.phone}  (new recipient)",
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Name unverified — could not confirm with DuitNow",
+                    text = localeText(
+                        bm = "Nama tidak disahkan — tidak dapat sahkan dengan DuitNow",
+                        en = "Name unverified — could not confirm with DuitNow",
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     color = AlertRed,
                     fontWeight = FontWeight.Medium,
@@ -342,7 +372,10 @@ private fun RiskScoreCard(score: Int) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Risk score",
+                text = localeText(
+                    bm = "Skor risiko",
+                    en = "Risk score",
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
@@ -367,7 +400,10 @@ private fun RiskScoreCard(score: Int) {
             }
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "We pause anything above 70.",
+                text = localeText(
+                    bm = "Kami berhenti seketika apa-apa yang melebihi 70.",
+                    en = "We pause anything above 70.",
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )

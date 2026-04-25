@@ -90,10 +90,10 @@ class FakeTransferRepository : TransferRepository {
             "Amount above your usual range",
         )
         Verdict.RED -> listOf(
-            "7 orang lain laporkan nombor ini sebagai penipuan minggu ini",
-            "Akaun ini berkelakuan seperti akaun keldai — duit masuk dari ramai orang dan keluar dalam beberapa minit",
-            "Akaun baru dibuka 3 hari yang lalu",
-            "19 orang hantar duit ke nombor ini dalam 2 jam yang lalu",
+            "7 other people reported this number as a scam this week",
+            "This account behaves like a mule — money comes in from many people and leaves within minutes",
+            "Account was opened only 3 days ago",
+            "19 people sent money to this number in the last 2 hours",
         )
     }
 }

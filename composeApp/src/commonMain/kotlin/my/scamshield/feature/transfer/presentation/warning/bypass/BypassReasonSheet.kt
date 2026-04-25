@@ -36,7 +36,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
-import my.scamshield.core.presentation.component.BilingualLabel
+import my.scamshield.core.domain.i18n.AppLocale
+import my.scamshield.core.presentation.i18n.LocalAppLocale
+import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 
@@ -126,14 +128,12 @@ fun BypassReasonSheet(
 private fun PickReasonContent(onSelected: (BypassReason) -> Unit) {
     var selected by remember { mutableStateOf<BypassReason?>(null) }
     Text(
-        text = "Kenapa anda hantar duit ini?",
+        text = localeText(
+            bm = "Kenapa anda hantar duit ini?",
+            en = "Why are you sending this money?",
+        ),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
-    )
-    Text(
-        text = "Why are you sending this money?",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
     )
     Spacer(Modifier.height(20.dp))
     BypassReason.entries.forEach { reason ->
@@ -148,18 +148,12 @@ private fun PickReasonContent(onSelected: (BypassReason) -> Unit) {
                 onClick = { selected = reason },
             )
             Spacer(Modifier.size(4.dp))
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = reason.labelBm,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                )
-                Text(
-                    text = reason.labelEn,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
-            }
+            Text(
+                text = localeText(bm = reason.labelBm, en = reason.labelEn),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
     Spacer(Modifier.height(16.dp))
@@ -170,7 +164,11 @@ private fun PickReasonContent(onSelected: (BypassReason) -> Unit) {
             .fillMaxWidth()
             .height(60.dp),
     ) {
-        BilingualLabel(bm = "Teruskan", en = "Continue")
+        Text(
+            text = localeText(bm = "Teruskan", en = "Continue"),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 
@@ -189,7 +187,10 @@ private fun ReflectContent(
         )
         Spacer(Modifier.size(12.dp))
         Text(
-            text = "Sebelum anda hantar:",
+            text = localeText(
+                bm = "Sebelum anda hantar:",
+                en = "Before you send:",
+            ),
             style = MaterialTheme.typography.titleMedium,
             color = AlertRed,
             fontWeight = FontWeight.Bold,
@@ -203,15 +204,9 @@ private fun ReflectContent(
             .padding(16.dp),
     ) {
         Text(
-            text = reason.warningBm,
+            text = localeText(bm = reason.warningBm, en = reason.warningEn),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = reason.warningEn,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
         )
     }
     Spacer(Modifier.height(20.dp))
@@ -222,9 +217,13 @@ private fun ReflectContent(
             .height(64.dp),
         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
     ) {
-        BilingualLabel(
-            bm = "Saya faham risiko — teruskan",
-            en = "I understand the risk — continue",
+        Text(
+            text = localeText(
+                bm = "Saya faham risiko — teruskan",
+                en = "I understand the risk — continue",
+            ),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
         )
     }
     Spacer(Modifier.height(4.dp))
@@ -232,7 +231,10 @@ private fun ReflectContent(
         onClick = onBack,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        BilingualLabel(bm = "Kembali", en = "Go back")
+        Text(
+            text = localeText(bm = "Kembali", en = "Go back"),
+            style = MaterialTheme.typography.labelLarge,
+        )
     }
 }
 
@@ -245,33 +247,27 @@ private fun TypeConfirmContent(
     onBack: () -> Unit,
 ) {
     val matches = typed.trim().uppercase() == CONFIRM_PHRASE
+    val isEn = LocalAppLocale.current == AppLocale.EN
 
     Text(
-        text = "Langkah terakhir",
+        text = localeText(bm = "Langkah terakhir", en = "Last step"),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
     )
-    Text(
-        text = "Last step",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-    )
     Spacer(Modifier.height(8.dp))
     Text(
-        text = "Taip SAYA FAHAM untuk sahkan anda faham risiko:",
+        text = localeText(
+            bm = "Taip SAYA FAHAM untuk sahkan anda faham risiko:",
+            en = "Type SAYA FAHAM to confirm you understand the risk:",
+        ),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface,
-    )
-    Text(
-        text = "Type SAYA FAHAM to confirm you understand the risk:",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
     )
     Spacer(Modifier.height(12.dp))
     OutlinedTextField(
         value = typed,
         onValueChange = onTypedChange,
-        placeholder = { Text("SAYA FAHAM") },
+        placeholder = { Text(CONFIRM_PHRASE) },
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Characters,
             autoCorrect = false,
@@ -281,6 +277,14 @@ private fun TypeConfirmContent(
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
     )
+    if (isEn) {
+        Text(
+            text = "Meaning: I understand",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+            modifier = Modifier.padding(top = 4.dp, start = 4.dp),
+        )
+    }
     Spacer(Modifier.height(16.dp))
     Column(
         modifier = Modifier
@@ -289,16 +293,13 @@ private fun TypeConfirmContent(
             .padding(12.dp),
     ) {
         Text(
-            text = "⚠ Jika ini ternyata penipuan, anda mungkin tidak layak untuk pampasan.",
+            text = localeText(
+                bm = "⚠ Jika ini ternyata penipuan, anda mungkin tidak layak untuk pampasan.",
+                en = "⚠ If this turns out to be a scam, you may not be eligible for reimbursement.",
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = AlertRed,
             fontWeight = FontWeight.Medium,
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = "If this turns out to be a scam, you may not be eligible for reimbursement.",
-            style = MaterialTheme.typography.labelSmall,
-            color = AlertRed.copy(alpha = 0.8f),
         )
     }
     Spacer(Modifier.height(20.dp))
@@ -310,17 +311,27 @@ private fun TypeConfirmContent(
             .height(60.dp),
         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
     ) {
-        BilingualLabel(bm = "Hantar juga", en = "Send anyway")
+        Text(
+            text = localeText(bm = "Hantar juga", en = "Send anyway"),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+        )
     }
     Spacer(Modifier.height(4.dp))
     TextButton(
         onClick = onBack,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        BilingualLabel(bm = "Kembali", en = "Go back")
+        Text(
+            text = localeText(bm = "Kembali", en = "Go back"),
+            style = MaterialTheme.typography.labelLarge,
+        )
     }
     Text(
-        text = "Sebab direkod: ${reason.labelBm} · ${reason.labelEn}",
+        text = localeText(
+            bm = "Sebab direkod: ${reason.labelBm}",
+            en = "Reason recorded: ${reason.labelEn}",
+        ),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
