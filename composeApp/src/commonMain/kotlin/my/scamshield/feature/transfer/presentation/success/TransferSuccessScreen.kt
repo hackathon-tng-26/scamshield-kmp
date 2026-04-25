@@ -15,12 +15,13 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -29,10 +30,13 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.core.presentation.theme.SafeGreen
 import my.scamshield.core.presentation.util.toRmAmount
+import my.scamshield.feature.home.domain.repository.ActivityFeedRepository
 import my.scamshield.feature.home.presentation.HomeScreen
 import my.scamshield.feature.transfer.domain.model.Transaction
+import org.koin.compose.koinInject
 
 class TransferSuccessScreen(
     private val transaction: Transaction,
@@ -42,6 +46,10 @@ class TransferSuccessScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val activityFeed: ActivityFeedRepository = koinInject()
+        LaunchedEffect(transactionId) {
+            activityFeed.recordSent(transaction, transactionId)
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -62,33 +70,49 @@ class TransferSuccessScreen(
                 )
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    text = "Sent",
+                    text = localeText(bm = "Dihantar", en = "Sent"),
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "RM ${transaction.amount.toRmAmount()} to ${transaction.recipient.displayName}",
+                    text = localeText(
+                        bm = "RM ${transaction.amount.toRmAmount()} kepada ${transaction.recipient.displayName}",
+                        en = "RM ${transaction.amount.toRmAmount()} to ${transaction.recipient.displayName}",
+                    ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Ref: $transactionId",
+                    text = localeText(bm = "Ruj: $transactionId", en = "Ref: $transactionId"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
                 )
+                Spacer(Modifier.height(20.dp))
+                Text(
+                    text = localeText(
+                        bm = "Kami akan pantau transaksi ini. Laporkan jika ada apa-apa tidak kena.",
+                        en = "We'll watch this transaction. Report if anything goes wrong.",
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                )
             }
-            Button(
+            OutlinedButton(
                 onClick = { navigator.replaceAll(HomeScreen()) },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = SafeGreen),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
                     .align(Alignment.BottomCenter),
             ) {
-                Text("Back to home", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = localeText(bm = "Kembali ke laman utama", en = "Back to home"),
+                    style = MaterialTheme.typography.labelLarge,
+                )
             }
         }
     }
