@@ -14,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -26,9 +28,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,9 +45,15 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlin.math.absoluteValue
+import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.SafeGreen
 import my.scamshield.core.presentation.theme.SafeGreenBg
+import my.scamshield.core.presentation.theme.TngBlue
 import my.scamshield.core.presentation.util.toRmAmount
+import my.scamshield.feature.transfer.domain.model.Direction
+import my.scamshield.feature.transfer.domain.model.FeatureContribution
+import my.scamshield.feature.transfer.domain.model.RiskScore
 import my.scamshield.feature.transfer.domain.model.Transaction
 import my.scamshield.feature.transfer.domain.model.Verdict
 import my.scamshield.feature.transfer.presentation.success.TransferSuccessScreen
@@ -108,6 +120,8 @@ class TransferConfirmScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         )
+                        Spacer(Modifier.height(6.dp))
+                        VerifiedBadge(transaction.recipient.verifiedName)
                     }
                 }
 
@@ -115,7 +129,7 @@ class TransferConfirmScreen(
 
                 when {
                     state.isScoring -> ScoringCard()
-                    state.score != null && state.score!!.verdict != Verdict.RED -> VerifiedCard(state.score!!.verdict, state.score!!.latencyMs)
+                    state.score != null && state.score!!.verdict != Verdict.RED -> VerifiedCard(state.score!!)
                 }
 
                 Spacer(Modifier.weight(1f))
@@ -127,7 +141,7 @@ class TransferConfirmScreen(
                         }
                     },
                     enabled = state.score != null && state.score!!.verdict != Verdict.RED && !state.isSending,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.buttonColors(containerColor = TngBlue),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -168,38 +182,95 @@ private fun ScoringCard() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun VerifiedCard(verdict: Verdict, latencyMs: Long) {
-    val isSafe = verdict == Verdict.GREEN
+private fun VerifiedCard(score: RiskScore) {
+    var expanded by remember { mutableStateOf(false) }
+    val isSafe = score.verdict == Verdict.GREEN
+    val containerBg = if (isSafe) SafeGreenBg else MaterialTheme.colorScheme.tertiaryContainer
+    val accent = if (isSafe) SafeGreen else MaterialTheme.colorScheme.tertiary
+
     Card(
+        onClick = { expanded = !expanded },
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSafe) SafeGreenBg else MaterialTheme.colorScheme.tertiaryContainer,
-        ),
+        colors = CardDefaults.cardColors(containerColor = containerBg),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = if (isSafe) SafeGreen else MaterialTheme.colorScheme.tertiary,
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (isSafe) "ScamShield: low risk" else "ScamShield: medium risk — please reconfirm",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (isSafe) SafeGreen else MaterialTheme.colorScheme.onTertiaryContainer,
+        Column {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = accent,
                 )
-                Text(
-                    text = "scored in $latencyMs ms",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isSafe) "ScamShield: low risk" else "ScamShield: medium risk — please reconfirm",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (isSafe) SafeGreen else MaterialTheme.colorScheme.onTertiaryContainer,
+                    )
+                    Text(
+                        text = "scored in ${score.latencyMs} ms · tap to see why",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
+                }
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = accent,
                 )
             }
+            if (expanded && score.attribution.isNotEmpty()) {
+                HorizontalDivider(color = accent.copy(alpha = 0.2f))
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    score.attribution.forEach { c -> AttributionRow(c) }
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun VerifiedBadge(verifiedName: String?) {
+    val verified = verifiedName != null
+    val text = if (verified) "✓ verified · DuitNow" else "Name unverified — proceed with caution"
+    val color = if (verified) SafeGreen else MaterialTheme.colorScheme.tertiary
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = color,
+        fontWeight = FontWeight.Medium,
+    )
+}
+
+@Composable
+private fun AttributionRow(c: FeatureContribution) {
+    val raisesRisk = c.direction == Direction.POSITIVE
+    val deltaColor = if (raisesRisk) AlertRed else SafeGreen
+    val deltaSign = if (raisesRisk) "+" else "−"
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = c.feature,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+        )
+        Text(
+            text = "$deltaSign${c.contribution.absoluteValue}",
+            style = MaterialTheme.typography.labelMedium,
+            color = deltaColor,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }

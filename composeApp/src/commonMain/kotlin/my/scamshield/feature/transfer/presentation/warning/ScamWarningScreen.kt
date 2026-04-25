@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -23,7 +25,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,12 +44,13 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
-import my.scamshield.core.presentation.theme.WarnOrange
-import my.scamshield.core.presentation.theme.WarnOrangeBg
 import my.scamshield.core.presentation.util.toRmAmount
+import my.scamshield.core.platform.Caller
+import my.scamshield.feature.home.domain.repository.ActivityFeedRepository
 import my.scamshield.feature.home.presentation.HomeScreen
 import my.scamshield.feature.transfer.domain.model.RiskScore
 import my.scamshield.feature.transfer.domain.model.Transaction
+import org.koin.compose.koinInject
 
 class ScamWarningScreen(
     private val transaction: Transaction,
@@ -58,14 +60,15 @@ class ScamWarningScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val activityFeed: ActivityFeedRepository = koinInject()
+        val caller: Caller = koinInject()
 
-        var remainingSeconds by remember { mutableStateOf(INITIAL_COUNTDOWN_SEC) }
+        var coolingSecondsLeft by remember { mutableStateOf(BYPASS_COOLING_SEC) }
         LaunchedEffect(Unit) {
-            while (remainingSeconds > 0) {
+            while (coolingSecondsLeft > 0) {
                 delay(1_000L)
-                remainingSeconds -= 1
+                coolingSecondsLeft -= 1
             }
-            navigator.replaceAll(HomeScreen())
         }
 
         Box(
@@ -86,7 +89,7 @@ class ScamWarningScreen(
                     Spacer(Modifier.height(16.dp))
 
                     Text(
-                        text = "Why this looks like a scam",
+                        text = "Kenapa kami tanya:",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color(0xFF7A0F19),
                         fontWeight = FontWeight.Bold,
@@ -99,38 +102,60 @@ class ScamWarningScreen(
                     Spacer(Modifier.height(16.dp))
                     RiskScoreCard(score.score)
 
-                    Spacer(Modifier.height(12.dp))
-                    CountdownCard(remainingSeconds)
-
                     Spacer(Modifier.weight(1f))
 
                     Button(
-                        onClick = { navigator.replaceAll(HomeScreen()) },
+                        onClick = {
+                            activityFeed.recordBlocked(transaction, "Mule pattern")
+                            navigator.replaceAll(HomeScreen())
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
                     ) {
-                        Text("Cancel transfer", style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            text = "Ya, batalkan — saya tak kenal",
+                            style = MaterialTheme.typography.labelLarge,
+                        )
                     }
                     Spacer(Modifier.height(10.dp))
                     OutlinedButton(
-                        onClick = { },
+                        onClick = { caller.dial("997") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AlertRed),
                     ) {
-                        Text("Talk to an agent first", color = MaterialTheme.colorScheme.primary)
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = null,
+                            modifier = Modifier.height(20.dp),
+                        )
+                        Spacer(Modifier.padding(horizontal = 4.dp))
+                        Text(
+                            text = "Call NSRC 997",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                     Spacer(Modifier.height(4.dp))
+                    val bypassEnabled = coolingSecondsLeft == 0
                     TextButton(
                         onClick = { navigator.replaceAll(HomeScreen()) },
+                        enabled = bypassEnabled,
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                     ) {
                         Text(
-                            text = "I still want to proceed",
+                            text = if (bypassEnabled) {
+                                "I still want to proceed"
+                            } else {
+                                "I still want to proceed (wait ${coolingSecondsLeft}s)"
+                            },
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                            color = MaterialTheme.colorScheme.onBackground.copy(
+                                alpha = if (bypassEnabled) 0.5f else 0.3f,
+                            ),
                         )
                     }
                 }
@@ -139,7 +164,7 @@ class ScamWarningScreen(
     }
 
     companion object {
-        private const val INITIAL_COUNTDOWN_SEC = 5 * 60
+        private const val BYPASS_COOLING_SEC = 30
     }
 }
 
@@ -161,13 +186,13 @@ private fun HeaderBar() {
         )
         Column {
             Text(
-                text = "ScamShield alert",
+                text = "Awak pasti kenal orang ini?",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = "High risk detected — transaction paused",
+                text = "Are you sure you know this person?",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White,
             )
@@ -177,6 +202,7 @@ private fun HeaderBar() {
 
 @Composable
 private fun TransactionSummaryCard(transaction: Transaction) {
+    val recipient = transaction.recipient
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -195,11 +221,38 @@ private fun TransactionSummaryCard(transaction: Transaction) {
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(4.dp))
-            Text(
-                text = "to  ${transaction.recipient.phone}  (new recipient)",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            )
+            if (recipient.verifiedName != null) {
+                Text(
+                    text = "to  ${recipient.verifiedName}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    text = recipient.phone,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "✓ verified · DuitNow",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+            } else {
+                Text(
+                    text = "to  ${recipient.phone}  (new recipient)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Name unverified — could not confirm with DuitNow",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = AlertRed,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
         }
     }
 }
@@ -260,21 +313,3 @@ private fun RiskScoreCard(score: Int) {
     }
 }
 
-@Composable
-private fun CountdownCard(remainingSec: Int) {
-    val mm = remainingSec / 60
-    val ss = remainingSec % 60
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = WarnOrangeBg),
-        shape = RoundedCornerShape(10.dp),
-    ) {
-        Text(
-            text = "Transaction will auto-cancel in  ${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}",
-            style = MaterialTheme.typography.labelMedium,
-            color = WarnOrange,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(14.dp),
-        )
-    }
-}

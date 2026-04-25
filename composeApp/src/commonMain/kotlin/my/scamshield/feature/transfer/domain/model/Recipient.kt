@@ -6,4 +6,5 @@ data class Recipient(
     val phone: String,
     val isInContacts: Boolean = false,
     val priorTransferCount: Int = 0,
+    val verifiedName: String? = null,
 )

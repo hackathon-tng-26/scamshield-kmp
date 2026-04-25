@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -31,8 +32,10 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import my.scamshield.core.presentation.theme.SafeGreen
 import my.scamshield.core.presentation.util.toRmAmount
+import my.scamshield.feature.home.domain.repository.ActivityFeedRepository
 import my.scamshield.feature.home.presentation.HomeScreen
 import my.scamshield.feature.transfer.domain.model.Transaction
+import org.koin.compose.koinInject
 
 class TransferSuccessScreen(
     private val transaction: Transaction,
@@ -42,6 +45,10 @@ class TransferSuccessScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val activityFeed: ActivityFeedRepository = koinInject()
+        LaunchedEffect(transactionId) {
+            activityFeed.recordSent(transaction, transactionId)
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()

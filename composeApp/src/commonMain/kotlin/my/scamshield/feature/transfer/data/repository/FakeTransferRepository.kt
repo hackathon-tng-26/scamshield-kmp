@@ -38,6 +38,7 @@ class FakeTransferRepository : TransferRepository {
         return when {
             phone.contains("8712") -> 87
             phone.contains("4001") -> 91
+            phone.contains("4421") -> 87
             tx.recipient.isInContacts -> (15..25).random()
             tx.amount >= 1_000.0 -> (55..65).random()
             else -> (18..30).random()
@@ -76,10 +77,10 @@ class FakeTransferRepository : TransferRepository {
             "Amount above your usual range",
         )
         Verdict.RED -> listOf(
-            "19 users transferred to this number in the last 2 hours",
-            "7 of them later reported it as a scam",
-            "Account created 3 days ago",
-            "Matches mule-account pattern MP-047",
+            "7 orang lain laporkan nombor ini sebagai penipuan minggu ini",
+            "Akaun ini berkelakuan seperti akaun keldai — duit masuk dari ramai orang dan keluar dalam beberapa minit",
+            "Akaun baru dibuka 3 hari yang lalu",
+            "19 orang hantar duit ke nombor ini dalam 2 jam yang lalu",
         )
     }
 }

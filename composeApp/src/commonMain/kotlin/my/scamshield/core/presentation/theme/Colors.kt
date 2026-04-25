@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 
 val TngRed = Color(0xFFEE2D37)
 val TngRedDark = Color(0xFFBE1D25)
+val TngBlue = Color(0xFF1976D2)
 val SafeGreen = Color(0xFF2E7D32)
 val SafeGreenBg = Color(0xFFE8F5E9)
 val WarnOrange = Color(0xFFE36C0A)
