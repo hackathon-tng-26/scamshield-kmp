@@ -15,9 +15,9 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,10 +86,17 @@ class TransferSuccessScreen(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
                 )
+                Spacer(Modifier.height(20.dp))
+                Text(
+                    text = "We'll watch this transaction. Report if anything goes wrong.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                )
             }
-            Button(
+            OutlinedButton(
                 onClick = { navigator.replaceAll(HomeScreen()) },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = SafeGreen),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)

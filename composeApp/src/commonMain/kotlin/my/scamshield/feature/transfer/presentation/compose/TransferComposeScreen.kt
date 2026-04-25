@@ -184,7 +184,7 @@ class TransferComposeScreen : Screen {
 
                 if (isHeld) {
                     Text(
-                        text = "On hold until tomorrow — you said you'd check with someone first",
+                        text = "You held a transfer to this number earlier — still on hold until tomorrow",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Medium,
@@ -245,7 +245,12 @@ private fun ContactChip(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val ringColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val isFlagged = contact.trust == TrustLevel.RED
+    val ringColor = when {
+        isFlagged -> AlertRed
+        isSelected -> MaterialTheme.colorScheme.primary
+        else -> Color.Transparent
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -279,6 +284,14 @@ private fun ContactChip(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onBackground,
         )
+        if (isFlagged) {
+            Text(
+                text = "⚠ flagged",
+                style = MaterialTheme.typography.labelSmall,
+                color = AlertRed,
+                fontWeight = FontWeight.Medium,
+            )
+        }
     }
 }
 
@@ -318,7 +331,7 @@ private fun TrustBadge(trust: TrustLevel) {
         }
         TrustLevel.RED -> {
             bg = AlertRedBg; fg = AlertRed
-            text = "Reported 3 times this week · mule pattern"; icon = Icons.Default.Shield
+            text = "7 reports this week · mule account"; icon = Icons.Default.Shield
         }
         TrustLevel.UNKNOWN -> return
     }

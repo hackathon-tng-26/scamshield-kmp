@@ -30,7 +30,20 @@ class FakeTransferRepository : TransferRepository {
 
     override suspend fun executeTransfer(transaction: Transaction): Result<String> {
         delay(200L)
-        return Result.success("fake-tx-${Clock.System.now().toEpochMilliseconds()}")
+        return Result.success(generateTxRef())
+    }
+
+    private fun generateTxRef(): String {
+        val now = Clock.System.now().toEpochMilliseconds()
+        val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        fun chunk(seed: Long): String = buildString {
+            var s = seed and 0x7FFFFFFFFFFFFFFFL
+            repeat(4) {
+                append(chars[(s % chars.length).toInt()])
+                s /= chars.length
+            }
+        }
+        return "TNG-2026-${chunk(now)}-${chunk(now shr 20)}"
     }
 
     private fun scoreFor(tx: Transaction): Int {

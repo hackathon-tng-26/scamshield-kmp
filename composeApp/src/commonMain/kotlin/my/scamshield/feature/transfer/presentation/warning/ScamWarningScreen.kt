@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Button
@@ -46,6 +47,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
+import my.scamshield.core.presentation.theme.WarnOrange
 import my.scamshield.core.presentation.util.toRmAmount
 import my.scamshield.core.platform.Caller
 import my.scamshield.feature.home.domain.repository.ActivityFeedRepository
@@ -114,7 +116,7 @@ class ScamWarningScreen(
 
                     Button(
                         onClick = {
-                            activityFeed.recordBlocked(transaction, "Mule pattern")
+                            activityFeed.recordBlocked(transaction, "Akaun keldai")
                             navigator.replaceAll(HomeScreen())
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
@@ -147,19 +149,27 @@ class ScamWarningScreen(
                             fontWeight = FontWeight.Bold,
                         )
                     }
-                    Spacer(Modifier.height(2.dp))
-                    TextButton(
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedButton(
                         onClick = {
                             activityFeed.recordHeld(transaction)
                             navigator.replaceAll(HomeScreen())
                         },
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = WarnOrange),
                     ) {
+                        Icon(
+                            imageVector = Icons.Default.Schedule,
+                            contentDescription = null,
+                            modifier = Modifier.height(20.dp),
+                        )
+                        Spacer(Modifier.padding(horizontal = 4.dp))
                         Text(
-                            text = "Hold for 24h — let me check with someone",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                            fontWeight = FontWeight.Medium,
+                            text = "Hold for 24h — let me check first",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
                         )
                     }
                     val bypassEnabled = coolingSecondsLeft == 0
@@ -349,6 +359,12 @@ private fun RiskScoreCard(score: Int) {
                         .height(8.dp),
                 )
             }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "We pause anything above 70.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
         }
     }
 }

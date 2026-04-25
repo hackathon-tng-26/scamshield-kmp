@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import my.scamshield.core.presentation.theme.AlertRed
@@ -256,7 +257,11 @@ private fun TypeConfirmContent(
         value = typed,
         onValueChange = onTypedChange,
         placeholder = { Text("SAYA FAHAM") },
-        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Characters,
+            autoCorrect = false,
+            keyboardType = KeyboardType.Ascii,
+        ),
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
     )

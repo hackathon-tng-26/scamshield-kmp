@@ -93,7 +93,7 @@ class InMemoryActivityFeedRepository(
                 id = "seed-blocked-old",
                 kind = ActivityKind.BLOCKED,
                 title = "Blocked: Suspicious transfer",
-                subtitle = "+60 13-XXXX 4421 · Mule pattern",
+                subtitle = "+60 13-XXXX 4421 · Akaun keldai",
                 amount = 850.0,
                 timestamp = now - 5.days,
             ),
