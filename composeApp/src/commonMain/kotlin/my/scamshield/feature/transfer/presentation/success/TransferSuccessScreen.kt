@@ -102,7 +102,7 @@ class TransferSuccessScreen(
                 )
             }
             OutlinedButton(
-                onClick = { navigator.replaceAll(HomeScreen()) },
+                onClick = { navigator.popUntil { it is HomeScreen } },
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = SafeGreen),
                 modifier = Modifier
                     .fillMaxWidth()

@@ -57,6 +57,7 @@ import my.scamshield.feature.transfer.domain.model.FeatureContribution
 import my.scamshield.feature.transfer.domain.model.RiskScore
 import my.scamshield.feature.transfer.domain.model.Transaction
 import my.scamshield.feature.transfer.domain.model.Verdict
+import my.scamshield.feature.home.presentation.HomeScreen
 import my.scamshield.feature.transfer.presentation.success.TransferSuccessScreen
 import my.scamshield.feature.transfer.presentation.warning.ScamWarningScreen
 
@@ -145,7 +146,8 @@ class TransferConfirmScreen(
                 Button(
                     onClick = {
                         viewModel.confirmSend { txId ->
-                            navigator.replaceAll(TransferSuccessScreen(transaction, txId))
+                            navigator.popUntil { it is HomeScreen }
+                            navigator.push(TransferSuccessScreen(transaction, txId))
                         }
                     },
                     enabled = state.score != null && state.score!!.verdict != Verdict.RED && !state.isSending,
