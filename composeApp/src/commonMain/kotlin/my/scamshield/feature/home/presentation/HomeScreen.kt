@@ -2,8 +2,11 @@ package my.scamshield.feature.home.presentation
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateBounds
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
@@ -15,6 +18,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,13 +56,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,6 +78,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlin.time.Instant
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -106,6 +118,8 @@ class HomeScreen : Screen {
         val model = koinScreenModel<HomeScreenModel>()
         val user by session.currentUser.collectAsState()
         val activity by model.activity.collectAsStateWithLifecycle()
+        val hasPlayedScamShieldEntry by model.hasPlayedScamShieldEntry.collectAsStateWithLifecycle()
+        val introducedActivityIds by model.introducedActivityIds.collectAsStateWithLifecycle()
 
         val snackbarHost = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
@@ -136,10 +150,15 @@ class HomeScreen : Screen {
                 )
                 Spacer(Modifier.height(20.dp))
 
+                val surfaceCardShape = RoundedCornerShape(16.dp)
+                val surfaceCardBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, surfaceCardBorderColor, surfaceCardShape),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    shape = surfaceCardShape,
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
@@ -161,9 +180,14 @@ class HomeScreen : Screen {
 
                 val blockedCount = activity.count { it.kind == ActivityKind.BLOCKED }
                 val cardShape = RoundedCornerShape(16.dp)
-                var traceTarget by remember { mutableStateOf(0f) }
-                var traceComplete by remember { mutableStateOf(false) }
-                var countUpTrigger by remember { mutableStateOf(false) }
+                val priorBlockedCount = remember { model.lastDisplayedBlockedCount.value }
+                var traceTarget by remember { mutableStateOf(if (hasPlayedScamShieldEntry) 1f else 0f) }
+                var traceComplete by remember { mutableStateOf(hasPlayedScamShieldEntry) }
+                var countTarget by remember {
+                    mutableStateOf(if (hasPlayedScamShieldEntry) priorBlockedCount else 0)
+                }
+                val activityReadyOnEntry = hasPlayedScamShieldEntry && priorBlockedCount == blockedCount
+                var activityCascadeTrigger by remember { mutableStateOf(activityReadyOnEntry) }
                 val traceProgress by animateFloatAsState(
                     targetValue = traceTarget,
                     animationSpec = tween(
@@ -174,15 +198,33 @@ class HomeScreen : Screen {
                     label = "scamShieldBorderTrace",
                 )
                 val animatedBlockedCount by animateIntAsState(
-                    targetValue = if (countUpTrigger) blockedCount else 0,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessLow,
-                    ),
+                    targetValue = countTarget,
+                    animationSpec = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+                    finishedListener = {
+                        if (it == blockedCount) {
+                            model.setLastDisplayedBlockedCount(blockedCount)
+                            activityCascadeTrigger = true
+                            model.markScamShieldEntryPlayed()
+                        }
+                    },
                     label = "scamShieldBlockedCount",
                 )
+                val shimmerProgress = remember { Animatable(0f) }
                 LaunchedEffect(Unit) {
-                    traceTarget = 1f
+                    if (!hasPlayedScamShieldEntry) {
+                        traceTarget = 1f
+                    }
+                }
+                LaunchedEffect(blockedCount, hasPlayedScamShieldEntry) {
+                    if (hasPlayedScamShieldEntry && countTarget != blockedCount) {
+                        delay(300L)
+                        countTarget = blockedCount
+                        shimmerProgress.snapTo(0f)
+                        shimmerProgress.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+                        )
+                    }
                 }
                 Card(
                     onClick = { navigator.push(BlockedListScreen()) },
@@ -193,7 +235,30 @@ class HomeScreen : Screen {
                             color = SafeGreen,
                             width = 2.5.dp,
                             shape = cardShape,
-                        ),
+                        )
+                        .clip(cardShape)
+                        .drawWithContent {
+                            drawContent()
+                            val p = shimmerProgress.value
+                            if (p > 0f && p < 1f) {
+                                val w = size.width
+                                val h = size.height
+                                val band = w * 0.35f
+                                val span = w + band * 2f
+                                val x = -band + p * span
+                                drawRect(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            Color.White.copy(alpha = 0.45f),
+                                            Color.Transparent,
+                                        ),
+                                        start = Offset(x, 0f),
+                                        end = Offset(x + band, h),
+                                    ),
+                                )
+                            }
+                        },
                     colors = CardDefaults.cardColors(containerColor = SafeGreenBg),
                     shape = cardShape,
                 ) {
@@ -205,11 +270,11 @@ class HomeScreen : Screen {
                             modifier = Modifier.size(44.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            if (traceComplete) {
+                            if (traceComplete && !hasPlayedScamShieldEntry) {
                                 ScamShieldLottieIcon(
                                     modifier = Modifier.size(44.dp),
                                     triggerProgress = 0.30f,
-                                    onTrigger = { countUpTrigger = true },
+                                    onTrigger = { countTarget = blockedCount },
                                 )
                             } else {
                                 Icon(
@@ -233,9 +298,9 @@ class HomeScreen : Screen {
                                 AnimatedContent(
                                     targetState = animatedBlockedCount,
                                     transitionSpec = {
-                                        (slideInVertically(tween(150)) { it / 6 } + fadeIn(tween(150)))
+                                        (slideInVertically(tween(300)) { it / 4 } + fadeIn(tween(300)))
                                             .togetherWith(
-                                                slideOutVertically(tween(150)) { -it / 6 } + fadeOut(tween(150)),
+                                                slideOutVertically(tween(300)) { -it / 4 } + fadeOut(tween(300)),
                                             )
                                             .using(SizeTransform(clip = false))
                                     },
@@ -278,20 +343,89 @@ class HomeScreen : Screen {
                 )
                 Spacer(Modifier.height(8.dp))
 
+                var bottomButtonsVisible by remember { mutableStateOf(hasPlayedScamShieldEntry) }
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = surfaceCardShape,
                 ) {
                     val visible = activity.take(3)
-                    Column {
-                        visible.forEachIndexed { index, item ->
-                            ActivityRow(item, now)
-                            if (index < visible.lastIndex) {
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                )
+                    val newItemPresent = visible.any { !introducedActivityIds.contains(it.id) }
+                    LookaheadScope {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            visible.forEachIndexed { index, item ->
+                                key(item.id) {
+                                    val isFirst = index == 0
+                                    val isLast = index == visible.lastIndex
+                                    val rowShape = when {
+                                        isFirst && isLast -> RoundedCornerShape(16.dp)
+                                        isFirst -> RoundedCornerShape(
+                                            topStart = 16.dp,
+                                            topEnd = 16.dp,
+                                            bottomStart = 4.dp,
+                                            bottomEnd = 4.dp,
+                                        )
+                                        isLast -> RoundedCornerShape(
+                                            topStart = 4.dp,
+                                            topEnd = 4.dp,
+                                            bottomStart = 16.dp,
+                                            bottomEnd = 16.dp,
+                                        )
+                                        else -> RoundedCornerShape(4.dp)
+                                    }
+                                    val isNew = !introducedActivityIds.contains(item.id)
+                                    val isBlocked = item.kind == ActivityKind.BLOCKED
+                                    var revealed by remember { mutableStateOf(!isNew) }
+                                    LaunchedEffect(activityCascadeTrigger) {
+                                        if (!activityCascadeTrigger || revealed) return@LaunchedEffect
+                                        val delayMs = when {
+                                            isNew && hasPlayedScamShieldEntry && newItemPresent && isBlocked -> 250L
+                                            isNew && hasPlayedScamShieldEntry && newItemPresent -> 550L
+                                            else -> index * 100L
+                                        }
+                                        delay(delayMs)
+                                        revealed = true
+                                    }
+                                    val fadeDuration = if (isNew && isBlocked) 180 else 350
+                                    val itemAlpha by animateFloatAsState(
+                                        targetValue = if (revealed) 1f else 0f,
+                                        animationSpec = tween(durationMillis = fadeDuration),
+                                        finishedListener = {
+                                            if (it == 1f) {
+                                                if (isNew) model.markActivityIntroduced(item.id)
+                                                if (isLast) bottomButtonsVisible = true
+                                            }
+                                        },
+                                        label = "activityFade$index",
+                                    )
+                                    val newItemDropDp by animateDpAsState(
+                                        targetValue = if (revealed || !isNew) 0.dp else (-12).dp,
+                                        animationSpec = if (isNew && isBlocked) {
+                                            spring(
+                                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                                stiffness = Spring.StiffnessMedium,
+                                            )
+                                        } else {
+                                            spring(
+                                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                                stiffness = Spring.StiffnessMediumLow,
+                                            )
+                                        },
+                                        label = "newItemDrop$index",
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .animateBounds(this@LookaheadScope)
+                                            .graphicsLayer {
+                                                alpha = itemAlpha
+                                                translationY = newItemDropDp.toPx()
+                                            },
+                                    ) {
+                                        ActivityRow(item, now, rowShape)
+                                    }
+                                }
                             }
                         }
                     }
@@ -299,8 +433,26 @@ class HomeScreen : Screen {
 
                 Spacer(Modifier.height(24.dp))
 
+                val buttonsAlpha by animateFloatAsState(
+                    targetValue = if (bottomButtonsVisible) 1f else 0f,
+                    animationSpec = tween(durationMillis = 350),
+                    label = "bottomButtonsFade",
+                )
+                val buttonsOffsetDp by animateDpAsState(
+                    targetValue = if (bottomButtonsVisible) 0.dp else 12.dp,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow,
+                    ),
+                    label = "bottomButtonsRise",
+                )
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            alpha = buttonsAlpha
+                            translationY = buttonsOffsetDp.toPx()
+                        },
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -311,7 +463,9 @@ class HomeScreen : Screen {
                     val scanLabel = localeText(bm = "Imbas QR", en = "Scan QR")
                     Surface(
                         onClick = {
-                            scope.launch { snackbarHost.showSnackbar(scanSoonMsg) }
+                            if (bottomButtonsVisible) {
+                                scope.launch { snackbarHost.showSnackbar(scanSoonMsg) }
+                            }
                         },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primary,
@@ -327,9 +481,14 @@ class HomeScreen : Screen {
                         )
                     }
                     Button(
-                        onClick = { navigator.push(TransferComposeScreen()) },
+                        onClick = {
+                            if (bottomButtonsVisible) navigator.push(TransferComposeScreen())
+                        },
+                        enabled = bottomButtonsVisible,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
+                            disabledContainerColor = MaterialTheme.colorScheme.primary,
+                            disabledContentColor = Color.White,
                         ),
                         modifier = Modifier
                             .weight(1f)
@@ -353,13 +512,17 @@ class HomeScreen : Screen {
 }
 
 @Composable
-private fun ActivityRow(item: ActivityItem, now: Instant) {
+private fun ActivityRow(
+    item: ActivityItem,
+    now: Instant,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(10.dp),
+) {
     val isBlocked = item.kind == ActivityKind.BLOCKED
     val isHeld = item.kind == ActivityKind.HELD
     val rowBg = when {
         isBlocked -> AlertRedBg
         isHeld -> WarnOrangeBg
-        else -> Color.Transparent
+        else -> SafeGreenBg
     }
     val icon = when {
         isBlocked -> Icons.Default.Block
@@ -375,7 +538,8 @@ private fun ActivityRow(item: ActivityItem, now: Instant) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(rowBg)
+            .background(rowBg, shape)
+            .border(1.dp, iconTint.copy(alpha = 0.25f), shape)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

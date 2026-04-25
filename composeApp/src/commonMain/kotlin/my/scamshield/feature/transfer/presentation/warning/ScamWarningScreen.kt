@@ -122,7 +122,7 @@ class ScamWarningScreen(
                     Button(
                         onClick = {
                             activityFeed.recordBlocked(transaction, "Akaun keldai")
-                            navigator.replaceAll(HomeScreen())
+                            navigator.popUntil { it is HomeScreen }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
                         modifier = Modifier
@@ -165,7 +165,7 @@ class ScamWarningScreen(
                     OutlinedButton(
                         onClick = {
                             activityFeed.recordHeld(transaction)
-                            navigator.replaceAll(HomeScreen())
+                            navigator.popUntil { it is HomeScreen }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -226,9 +226,10 @@ class ScamWarningScreen(
                         val result = executeTransfer(transaction)
                         result.onSuccess { txId ->
                             activityFeed.recordSent(transaction, txId, bypassedWarning = true)
-                            navigator.replaceAll(TransferSuccessScreen(transaction, txId))
+                            navigator.popUntil { it is HomeScreen }
+                            navigator.push(TransferSuccessScreen(transaction, txId))
                         }.onFailure {
-                            navigator.replaceAll(HomeScreen())
+                            navigator.popUntil { it is HomeScreen }
                         }
                     }
                 },
