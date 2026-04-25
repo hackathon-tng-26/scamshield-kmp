@@ -27,6 +27,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import my.scamshield.core.presentation.theme.SafeGreen
+import my.scamshield.core.presentation.util.toRmAmount
 import my.scamshield.feature.home.presentation.HomeScreen
 import my.scamshield.feature.transfer.domain.model.Transaction
 
@@ -63,7 +64,7 @@ class TransferSuccessScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "RM ${"%.2f".format(transaction.amount)} to ${transaction.recipient.displayName}",
+                    text = "RM ${transaction.amount.toRmAmount()} to ${transaction.recipient.displayName}",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,

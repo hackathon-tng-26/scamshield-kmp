@@ -41,6 +41,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import my.scamshield.core.presentation.theme.SafeGreen
 import my.scamshield.core.presentation.theme.SafeGreenBg
+import my.scamshield.core.presentation.util.toRmAmount
 import my.scamshield.feature.transfer.domain.model.Transaction
 import my.scamshield.feature.transfer.domain.model.Verdict
 import my.scamshield.feature.transfer.presentation.success.TransferSuccessScreen
@@ -93,7 +94,7 @@ class TransferConfirmScreen(
                         Text("You're sending", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "RM ${"%.2f".format(transaction.amount)}",
+                            text = "RM ${transaction.amount.toRmAmount()}",
                             style = MaterialTheme.typography.displayMedium,
                             fontWeight = FontWeight.Bold,
                         )
@@ -134,7 +135,7 @@ class TransferConfirmScreen(
                     if (state.isSending) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.height(24.dp).padding(2.dp))
                     } else {
-                        Text("Send RM ${"%.2f".format(transaction.amount)}", style = MaterialTheme.typography.labelLarge)
+                        Text("Send RM ${transaction.amount.toRmAmount()}", style = MaterialTheme.typography.labelLarge)
                     }
                 }
                 Spacer(Modifier.height(8.dp))
