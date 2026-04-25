@@ -42,6 +42,7 @@ import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.theme.WarnOrange
 import my.scamshield.core.presentation.theme.WarnOrangeBg
+import my.scamshield.core.presentation.util.toRmAmount
 import my.scamshield.feature.home.presentation.HomeScreen
 import my.scamshield.feature.transfer.domain.model.RiskScore
 import my.scamshield.feature.transfer.domain.model.Transaction
@@ -185,7 +186,7 @@ private fun TransactionSummaryCard(transaction: Transaction) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "RM ${"%.2f".format(transaction.amount)}",
+                text = "RM ${transaction.amount.toRmAmount()}",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
             )
