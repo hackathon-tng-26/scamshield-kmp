@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.feature.auth.domain.model.DemoUsers
 import my.scamshield.feature.auth.domain.repository.SessionRepository
 import my.scamshield.feature.home.presentation.HomeScreen
@@ -56,7 +57,10 @@ class LoginScreen : Screen {
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "Transfer money safely.\nStop scams before they happen.",
+                    text = localeText(
+                        bm = "Hantar duit dengan selamat.\nHentikan penipu sebelum mereka berjaya.",
+                        en = "Transfer money safely.\nStop scams before they happen.",
+                    ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
@@ -75,7 +79,10 @@ class LoginScreen : Screen {
                         .height(56.dp),
                 ) {
                     Text(
-                        text = "Continue as demo_user_01",
+                        text = localeText(
+                            bm = "Teruskan sebagai ${DemoUsers.WAFI.name}",
+                            en = "Continue as ${DemoUsers.WAFI.name}",
+                        ),
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }

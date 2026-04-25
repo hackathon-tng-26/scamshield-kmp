@@ -46,6 +46,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
 import my.scamshield.core.presentation.component.BilingualLabel
+import my.scamshield.core.presentation.component.LocaleToggle
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.theme.WarnOrange
@@ -238,7 +239,7 @@ private fun HeaderBar() {
             tint = Color.White,
             modifier = Modifier.height(28.dp),
         )
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Awak pasti kenal orang ini?",
                 style = MaterialTheme.typography.titleMedium,
@@ -251,6 +252,7 @@ private fun HeaderBar() {
                 color = Color.White,
             )
         }
+        LocaleToggle(onDark = true)
     }
 }
 

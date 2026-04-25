@@ -51,6 +51,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import my.scamshield.core.domain.wallet.WALLET_BALANCE_RM
+import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.theme.NeutralMuted
@@ -65,13 +66,15 @@ import my.scamshield.feature.transfer.domain.model.Transaction
 import my.scamshield.feature.transfer.presentation.confirm.TransferConfirmScreen
 import org.koin.compose.koinInject
 
+private data class PurposeOption(val bm: String, val en: String)
+
 private val PURPOSE_OPTIONS = listOf(
-    "Family or friend",
-    "Bill or rent",
-    "Online purchase",
-    "Investment",
-    "Prize or refund",
-    "Other",
+    PurposeOption("Keluarga atau kawan", "Family or friend"),
+    PurposeOption("Bil atau sewa", "Bill or rent"),
+    PurposeOption("Pembelian online", "Online purchase"),
+    PurposeOption("Pelaburan", "Investment"),
+    PurposeOption("Hadiah atau bayaran balik", "Prize or refund"),
+    PurposeOption("Lain-lain", "Other"),
 )
 
 private val AVATAR_PALETTE = listOf(
@@ -95,7 +98,7 @@ class TransferComposeScreen : Screen {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Send Money") },
+                    title = { Text(localeText(bm = "Hantar Duit", en = "Send Money")) },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -112,7 +115,7 @@ class TransferComposeScreen : Screen {
                     .padding(horizontal = 24.dp, vertical = 16.dp),
             ) {
                 Text(
-                    text = "Recents",
+                    text = localeText(bm = "Terkini", en = "Recents"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 )
@@ -133,7 +136,7 @@ class TransferComposeScreen : Screen {
                 OutlinedTextField(
                     value = state.recipientPhone,
                     onValueChange = viewModel::onPhoneChanged,
-                    label = { Text("Recipient phone") },
+                    label = { Text(localeText(bm = "Nombor penerima", en = "Recipient phone")) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
@@ -152,13 +155,16 @@ class TransferComposeScreen : Screen {
                 OutlinedTextField(
                     value = state.amountRm,
                     onValueChange = viewModel::onAmountChanged,
-                    label = { Text("Amount (RM)") },
+                    label = { Text(localeText(bm = "Jumlah (RM)", en = "Amount (RM)")) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Available: RM ${WALLET_BALANCE_RM.toRmAmount()}",
+                    text = localeText(
+                        bm = "Baki: RM ${WALLET_BALANCE_RM.toRmAmount()}",
+                        en = "Available: RM ${WALLET_BALANCE_RM.toRmAmount()}",
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     modifier = Modifier.align(Alignment.End),
@@ -176,7 +182,7 @@ class TransferComposeScreen : Screen {
                 OutlinedTextField(
                     value = state.note,
                     onValueChange = viewModel::onNoteChanged,
-                    label = { Text("Note (optional)") },
+                    label = { Text(localeText(bm = "Nota (pilihan)", en = "Note (optional)")) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -184,7 +190,10 @@ class TransferComposeScreen : Screen {
 
                 if (isHeld) {
                     Text(
-                        text = "You held a transfer to this number earlier — still on hold until tomorrow",
+                        text = localeText(
+                            bm = "Anda sudah tahan pindahan ke nombor ini — masih ditahan sehingga esok",
+                            en = "You held a transfer to this number earlier — still on hold until tomorrow",
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Medium,
@@ -228,10 +237,11 @@ class TransferComposeScreen : Screen {
                         .fillMaxWidth()
                         .height(56.dp),
                 ) {
+                    val continueLabel = localeText(bm = "Teruskan", en = "Continue")
                     val label = if (parsedAmount != null && parsedAmount > 0.0) {
-                        "Continue · RM ${parsedAmount.toRmAmount()}"
+                        "$continueLabel · RM ${parsedAmount.toRmAmount()}"
                     } else {
-                        "Continue"
+                        continueLabel
                     }
                     Text(label, style = MaterialTheme.typography.labelLarge)
                 }
@@ -288,7 +298,7 @@ private fun ContactChip(
         )
         if (isFlagged) {
             Text(
-                text = "⚠ flagged",
+                text = localeText(bm = "⚠ ditanda", en = "⚠ flagged"),
                 style = MaterialTheme.typography.labelSmall,
                 color = AlertRed,
                 fontWeight = FontWeight.Medium,
@@ -299,7 +309,9 @@ private fun ContactChip(
 
 @Composable
 private fun ResolvedNameLabel(resolvedName: String?) {
-    val text = resolvedName?.let { "Account holder: $it" } ?: "Name unavailable"
+    val text = resolvedName?.let {
+        localeText(bm = "Pemegang akaun: $it", en = "Account holder: $it")
+    } ?: localeText(bm = "Nama tidak tersedia", en = "Name unavailable")
     val color = if (resolvedName != null) {
         MaterialTheme.colorScheme.onBackground
     } else {
@@ -321,19 +333,28 @@ private fun TrustBadge(trust: TrustLevel) {
     when (trust) {
         TrustLevel.CHECKING -> {
             bg = Color(0xFFEEEEEE); fg = NeutralMuted
-            text = "Checking…"; icon = null
+            text = localeText(bm = "Menyemak…", en = "Checking…"); icon = null
         }
         TrustLevel.GREEN -> {
             bg = SafeGreenBg; fg = SafeGreen
-            text = "Verified · used 47× · 0 reports"; icon = null
+            text = localeText(
+                bm = "Disahkan · digunakan 47× · 0 laporan",
+                en = "Verified · used 47× · 0 reports",
+            ); icon = null
         }
         TrustLevel.AMBER -> {
             bg = WarnOrangeBg; fg = WarnOrange
-            text = "New recipient · first time"; icon = null
+            text = localeText(
+                bm = "Penerima baharu · kali pertama",
+                en = "New recipient · first time",
+            ); icon = null
         }
         TrustLevel.RED -> {
             bg = AlertRedBg; fg = AlertRed
-            text = "7 reports this week · mule account"; icon = Icons.Default.Shield
+            text = localeText(
+                bm = "7 laporan minggu ini · akaun keldai",
+                en = "7 reports this week · mule account",
+            ); icon = Icons.Default.Shield
         }
         TrustLevel.UNKNOWN -> return
     }
@@ -370,11 +391,16 @@ private fun PurposeDropdown(selected: String?, onSelect: (String?) -> Unit) {
         expanded = expanded,
         onExpandedChange = { expanded = it },
     ) {
+        val displayValue = selected?.let { sel ->
+            PURPOSE_OPTIONS.firstOrNull { it.en == sel || it.bm == sel }?.let {
+                localeText(bm = it.bm, en = it.en)
+            } ?: sel
+        } ?: ""
         OutlinedTextField(
-            value = selected ?: "",
+            value = displayValue,
             onValueChange = {},
             readOnly = true,
-            label = { Text("What's this for?") },
+            label = { Text(localeText(bm = "Untuk apa?", en = "What's this for?")) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -386,9 +412,9 @@ private fun PurposeDropdown(selected: String?, onSelect: (String?) -> Unit) {
         ) {
             PURPOSE_OPTIONS.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(localeText(bm = option.bm, en = option.en)) },
                     onClick = {
-                        onSelect(option)
+                        onSelect(option.en)
                         expanded = false
                     },
                 )

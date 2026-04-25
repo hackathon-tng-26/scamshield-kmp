@@ -46,6 +46,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlin.math.absoluteValue
+import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.SafeGreen
 import my.scamshield.core.presentation.theme.SafeGreenBg
@@ -81,7 +82,7 @@ class TransferConfirmScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Confirm transfer") },
+                    title = { Text(localeText(bm = "Sahkan pindahan", en = "Confirm transfer")) },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -103,7 +104,11 @@ class TransferConfirmScreen(
                     shape = RoundedCornerShape(16.dp),
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text("You're sending", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        Text(
+                            text = localeText(bm = "Anda menghantar", en = "You're sending"),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        )
                         Spacer(Modifier.height(8.dp))
                         Text(
                             text = "RM ${transaction.amount.toRmAmount()}",
@@ -112,7 +117,10 @@ class TransferConfirmScreen(
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "to ${transaction.recipient.displayName}",
+                            text = localeText(
+                                bm = "kepada ${transaction.recipient.displayName}",
+                                en = "to ${transaction.recipient.displayName}",
+                            ),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Text(
@@ -149,12 +157,18 @@ class TransferConfirmScreen(
                     if (state.isSending) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.height(24.dp).padding(2.dp))
                     } else {
-                        Text("Send RM ${transaction.amount.toRmAmount()}", style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            text = localeText(
+                                bm = "Hantar RM ${transaction.amount.toRmAmount()}",
+                                en = "Send RM ${transaction.amount.toRmAmount()}",
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
                     }
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Face ID to confirm",
+                    text = localeText(bm = "Face ID untuk sahkan", en = "Face ID to confirm"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                     modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -177,7 +191,12 @@ private fun ScoringCard() {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CircularProgressIndicator(modifier = Modifier.height(20.dp))
-            Text("ScamShield is scoring your transfer…")
+            Text(
+                localeText(
+                    bm = "ScamShield sedang menilai pindahan anda…",
+                    en = "ScamShield is scoring your transfer…",
+                ),
+            )
         }
     }
 }
@@ -209,12 +228,22 @@ private fun VerifiedCard(score: RiskScore) {
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (isSafe) "ScamShield: low risk" else "ScamShield: medium risk — please reconfirm",
+                        text = if (isSafe) {
+                            localeText(bm = "ScamShield: risiko rendah", en = "ScamShield: low risk")
+                        } else {
+                            localeText(
+                                bm = "ScamShield: risiko sederhana — sila sahkan semula",
+                                en = "ScamShield: medium risk — please reconfirm",
+                            )
+                        },
                         style = MaterialTheme.typography.labelLarge,
                         color = if (isSafe) SafeGreen else MaterialTheme.colorScheme.onTertiaryContainer,
                     )
                     Text(
-                        text = "scored in ${score.latencyMs} ms · tap to see why",
+                        text = localeText(
+                            bm = "dinilai dalam ${score.latencyMs} ms · ketuk untuk lihat sebab",
+                            en = "scored in ${score.latencyMs} ms · tap to see why",
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
@@ -241,7 +270,14 @@ private fun VerifiedCard(score: RiskScore) {
 @Composable
 private fun VerifiedBadge(verifiedName: String?) {
     val verified = verifiedName != null
-    val text = if (verified) "✓ verified · DuitNow" else "Name unverified — proceed with caution"
+    val text = if (verified) {
+        localeText(bm = "✓ disahkan · DuitNow", en = "✓ verified · DuitNow")
+    } else {
+        localeText(
+            bm = "Nama tidak disahkan — teruskan dengan berhati-hati",
+            en = "Name unverified — proceed with caution",
+        )
+    }
     val color = if (verified) SafeGreen else MaterialTheme.colorScheme.tertiary
     Text(
         text = text,

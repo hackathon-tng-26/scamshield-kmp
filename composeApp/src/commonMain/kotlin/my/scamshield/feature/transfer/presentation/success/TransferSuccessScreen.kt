@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.core.presentation.theme.SafeGreen
 import my.scamshield.core.presentation.util.toRmAmount
 import my.scamshield.feature.home.domain.repository.ActivityFeedRepository
@@ -69,26 +70,32 @@ class TransferSuccessScreen(
                 )
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    text = "Sent",
+                    text = localeText(bm = "Dihantar", en = "Sent"),
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "RM ${transaction.amount.toRmAmount()} to ${transaction.recipient.displayName}",
+                    text = localeText(
+                        bm = "RM ${transaction.amount.toRmAmount()} kepada ${transaction.recipient.displayName}",
+                        en = "RM ${transaction.amount.toRmAmount()} to ${transaction.recipient.displayName}",
+                    ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Ref: $transactionId",
+                    text = localeText(bm = "Ruj: $transactionId", en = "Ref: $transactionId"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
                 )
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    text = "We'll watch this transaction. Report if anything goes wrong.",
+                    text = localeText(
+                        bm = "Kami akan pantau transaksi ini. Laporkan jika ada apa-apa tidak kena.",
+                        en = "We'll watch this transaction. Report if anything goes wrong.",
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
@@ -102,7 +109,10 @@ class TransferSuccessScreen(
                     .height(56.dp)
                     .align(Alignment.BottomCenter),
             ) {
-                Text("Back to home", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = localeText(bm = "Kembali ke laman utama", en = "Back to home"),
+                    style = MaterialTheme.typography.labelLarge,
+                )
             }
         }
     }

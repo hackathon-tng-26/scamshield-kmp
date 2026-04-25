@@ -52,6 +52,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import my.scamshield.core.domain.util.AppClock
+import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.theme.SafeGreen
@@ -81,7 +82,8 @@ class HomeScreen : Screen {
         val snackbarHost = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
         val now = remember { appClock.now() }
-        val greeting = remember(now) { greetingFor(now) }
+        val greetingPair = remember(now) { greetingFor(now) }
+        val greeting = localeText(bm = greetingPair.first, en = greetingPair.second)
 
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHost) },
@@ -113,7 +115,7 @@ class HomeScreen : Screen {
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Balance",
+                            text = localeText(bm = "Baki", en = "Balance"),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         )
@@ -164,7 +166,10 @@ class HomeScreen : Screen {
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    text = "scams blocked this month",
+                                    text = localeText(
+                                        bm = "penipuan disekat bulan ini",
+                                        en = "scams blocked this month",
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                                     modifier = Modifier.padding(bottom = 6.dp),
@@ -182,7 +187,7 @@ class HomeScreen : Screen {
                 Spacer(Modifier.height(20.dp))
 
                 Text(
-                    text = "Recent activity",
+                    text = localeText(bm = "Aktiviti terkini", en = "Recent activity"),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
@@ -214,15 +219,19 @@ class HomeScreen : Screen {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    val scanSoonMsg = localeText(
+                        bm = "Imbas untuk bayar akan datang",
+                        en = "Scan to pay coming soon",
+                    )
                     OutlinedButton(
                         onClick = {
-                            scope.launch { snackbarHost.showSnackbar("Scan to pay coming soon") }
+                            scope.launch { snackbarHost.showSnackbar(scanSoonMsg) }
                         },
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp),
                     ) {
-                        Text("Scan QR")
+                        Text(localeText(bm = "Imbas QR", en = "Scan QR"))
                     }
                     Button(
                         onClick = { navigator.push(TransferComposeScreen()) },
@@ -240,7 +249,7 @@ class HomeScreen : Screen {
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "Send Money",
+                            text = localeText(bm = "Hantar Duit", en = "Send Money"),
                             style = MaterialTheme.typography.labelLarge,
                         )
                     }
@@ -309,7 +318,7 @@ private fun ActivityRow(item: ActivityItem, now: Instant) {
                     if (isBlocked) {
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = "saved",
+                            text = localeText(bm = "diselamatkan", en = "saved"),
                             style = MaterialTheme.typography.labelSmall,
                             color = SafeGreen.copy(alpha = 0.7f),
                         )
@@ -325,12 +334,12 @@ private fun ActivityRow(item: ActivityItem, now: Instant) {
     }
 }
 
-private fun greetingFor(now: Instant): String {
+private fun greetingFor(now: Instant): Pair<String, String> {
     val hour = now.toLocalDateTime(TimeZone.currentSystemDefault()).hour
     return when (hour) {
-        in 5..11 -> "Good morning,"
-        in 12..16 -> "Good afternoon,"
-        in 17..20 -> "Good evening,"
-        else -> "Welcome back,"
+        in 5..11 -> "Selamat pagi," to "Good morning,"
+        in 12..16 -> "Selamat tengah hari," to "Good afternoon,"
+        in 17..20 -> "Selamat petang," to "Good evening,"
+        else -> "Selamat datang kembali," to "Welcome back,"
     }
 }
