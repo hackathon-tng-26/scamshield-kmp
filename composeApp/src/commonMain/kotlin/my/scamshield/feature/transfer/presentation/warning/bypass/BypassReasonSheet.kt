@@ -35,6 +35,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
+import my.scamshield.core.presentation.component.BilingualLabel
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 
@@ -166,9 +167,9 @@ private fun PickReasonContent(onSelected: (BypassReason) -> Unit) {
         enabled = selected != null,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(60.dp),
     ) {
-        Text("Continue")
+        BilingualLabel(bm = "Teruskan", en = "Continue")
     }
 }
 
@@ -217,10 +218,13 @@ private fun ReflectContent(
         onClick = onContinue,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(64.dp),
         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
     ) {
-        Text("I understand the risk — continue")
+        BilingualLabel(
+            bm = "Saya faham risiko — teruskan",
+            en = "I understand the risk — continue",
+        )
     }
     Spacer(Modifier.height(4.dp))
     TextButton(
@@ -291,10 +295,10 @@ private fun TypeConfirmContent(
         enabled = matches,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(60.dp),
         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
     ) {
-        Text("Send anyway")
+        BilingualLabel(bm = "Hantar juga", en = "Send anyway")
     }
     Spacer(Modifier.height(4.dp))
     TextButton(

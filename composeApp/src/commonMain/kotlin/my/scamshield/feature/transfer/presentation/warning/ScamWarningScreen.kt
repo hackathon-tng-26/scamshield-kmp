@@ -45,6 +45,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
+import my.scamshield.core.presentation.component.BilingualLabel
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
 import my.scamshield.core.presentation.theme.WarnOrange
@@ -122,11 +123,11 @@ class ScamWarningScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(64.dp),
                     ) {
-                        Text(
-                            text = "Ya, batalkan — saya tak kenal",
-                            style = MaterialTheme.typography.labelLarge,
+                        BilingualLabel(
+                            bm = "Ya, batalkan — saya tak kenal",
+                            en = "Yes, cancel — I don't know them",
                         )
                     }
                     Spacer(Modifier.height(10.dp))
@@ -134,7 +135,7 @@ class ScamWarningScreen(
                         onClick = { caller.dial("997") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(60.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = AlertRed),
                     ) {
                         Icon(
@@ -143,10 +144,9 @@ class ScamWarningScreen(
                             modifier = Modifier.height(20.dp),
                         )
                         Spacer(Modifier.padding(horizontal = 4.dp))
-                        Text(
-                            text = "Call NSRC 997",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
+                        BilingualLabel(
+                            bm = "Hubungi NSRC 997",
+                            en = "Call National Scam Response Centre",
                         )
                     }
                     Spacer(Modifier.height(10.dp))
@@ -157,7 +157,7 @@ class ScamWarningScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(60.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = WarnOrange),
                     ) {
                         Icon(
@@ -166,10 +166,9 @@ class ScamWarningScreen(
                             modifier = Modifier.height(20.dp),
                         )
                         Spacer(Modifier.padding(horizontal = 4.dp))
-                        Text(
-                            text = "Hold for 24h — let me check first",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
+                        BilingualLabel(
+                            bm = "Tahan 24 jam — saya semak dulu",
+                            en = "Hold for 24h — let me check first",
                         )
                     }
                     val bypassEnabled = coolingSecondsLeft == 0

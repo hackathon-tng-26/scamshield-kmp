@@ -10,6 +10,5 @@ class HomeScreenModel(
     activityFeed: ActivityFeedRepository,
 ) : ScreenModel {
     val activity: StateFlow<List<ActivityItem>> = activityFeed.items
-    val scamsBlockedThisMonth: Int = 12
     val balanceRm: Double = WALLET_BALANCE_RM
 }

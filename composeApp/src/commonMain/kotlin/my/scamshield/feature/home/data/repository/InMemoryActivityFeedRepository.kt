@@ -80,23 +80,42 @@ class InMemoryActivityFeedRepository(
 
     private fun seed(): List<ActivityItem> {
         val now = clock.now()
-        return listOf(
-            ActivityItem(
-                id = "seed-sent-mum",
-                kind = ActivityKind.SENT,
-                title = "Sent to Mum",
-                subtitle = "+60 12-987 6543",
-                amount = 200.0,
-                timestamp = now - 3.days,
-            ),
-            ActivityItem(
-                id = "seed-blocked-old",
-                kind = ActivityKind.BLOCKED,
-                title = "Blocked: Suspicious transfer",
-                subtitle = "+60 13-XXXX 4421 · Akaun keldai",
-                amount = 850.0,
-                timestamp = now - 5.days,
-            ),
+        val blocked = listOf(
+            Triple("+60 13-XXXX 4421 · Akaun keldai", 850.0, 5.days),
+            Triple("+60 17-XXXX 8899 · Macau Scam pattern", 3500.0, 2.days),
+            Triple("+60 11-XXXX 2233 · Pelaburan palsu", 1200.0, 4.days),
+            Triple("+60 12-XXXX 9988 · Sahkan akaun (impersonation)", 450.0, 7.days),
+            Triple("+60 16-XXXX 5544 · Tipuan kerja online", 680.0, 9.days),
+            Triple("+60 13-XXXX 7766 · Penjual fake (Shopee)", 320.0, 11.days),
+            Triple("+60 19-XXXX 1122 · Akaun keldai", 2100.0, 14.days),
+            Triple("+60 14-XXXX 3344 · Pelaburan crypto palsu", 5000.0, 17.days),
+            Triple("+60 12-XXXX 6677 · Tipuan pinjaman", 900.0, 20.days),
+            Triple("+60 17-XXXX 9911 · Macau Scam pattern", 4200.0, 23.days),
+            Triple("+60 11-XXXX 4488 · Akaun keldai", 1750.0, 27.days),
         )
+        return buildList {
+            add(
+                ActivityItem(
+                    id = "seed-sent-mum",
+                    kind = ActivityKind.SENT,
+                    title = "Sent to Mum",
+                    subtitle = "+60 12-987 6543",
+                    amount = 200.0,
+                    timestamp = now - 3.days,
+                )
+            )
+            blocked.forEachIndexed { index, (subtitle, amount, age) ->
+                add(
+                    ActivityItem(
+                        id = "seed-blocked-$index",
+                        kind = ActivityKind.BLOCKED,
+                        title = "Blocked: Suspicious transfer",
+                        subtitle = subtitle,
+                        amount = amount,
+                        timestamp = now - age,
+                    )
+                )
+            }
+        }
     }
 }

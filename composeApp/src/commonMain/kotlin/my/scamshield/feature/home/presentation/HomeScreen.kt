@@ -63,6 +63,7 @@ import my.scamshield.feature.auth.domain.repository.SessionRepository
 import my.scamshield.feature.home.domain.model.ActivityItem
 import my.scamshield.feature.home.domain.model.ActivityKind
 import my.scamshield.feature.home.domain.model.relativeTime
+import my.scamshield.feature.home.presentation.blocked.BlockedListScreen
 import my.scamshield.feature.transfer.presentation.compose.TransferComposeScreen
 import org.koin.compose.koinInject
 
@@ -128,10 +129,9 @@ class HomeScreen : Screen {
 
                 Spacer(Modifier.height(12.dp))
 
+                val blockedCount = activity.count { it.kind == ActivityKind.BLOCKED }
                 Card(
-                    onClick = {
-                        scope.launch { snackbarHost.showSnackbar("Detailed history coming soon") }
-                    },
+                    onClick = { navigator.push(BlockedListScreen()) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = SafeGreenBg),
                     shape = RoundedCornerShape(16.dp),
@@ -157,7 +157,7 @@ class HomeScreen : Screen {
                             Spacer(Modifier.height(2.dp))
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
-                                    text = "${model.scamsBlockedThisMonth}",
+                                    text = "$blockedCount",
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onBackground,
