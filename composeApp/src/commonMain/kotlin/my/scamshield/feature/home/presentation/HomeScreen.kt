@@ -178,7 +178,7 @@ class HomeScreen : Screen {
 
                 Spacer(Modifier.height(12.dp))
 
-                val blockedCount = activity.count { it.kind == ActivityKind.BLOCKED }
+                val blockedCount = model.displayedBlockedCount
                 val cardShape = RoundedCornerShape(16.dp)
                 val priorBlockedCount = remember { model.lastDisplayedBlockedCount.value }
                 var traceTarget by remember { mutableStateOf(if (hasPlayedScamShieldEntry) 1f else 0f) }

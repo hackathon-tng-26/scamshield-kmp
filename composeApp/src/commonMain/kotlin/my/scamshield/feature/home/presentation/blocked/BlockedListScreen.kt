@@ -62,7 +62,7 @@ class BlockedListScreen : Screen {
         val activity by model.activity.collectAsStateWithLifecycle()
         val now = remember { appClock.now() }
         val blocked = activity.filter { it.kind == ActivityKind.BLOCKED }
-        val totalSaved = blocked.sumOf { it.amount ?: 0.0 }
+        val totalSaved = model.displayedAmountSavedRm
 
         Scaffold(
             topBar = {
@@ -84,7 +84,7 @@ class BlockedListScreen : Screen {
                     .padding(horizontal = 20.dp),
             ) {
                 Spacer(Modifier.height(8.dp))
-                SummaryCard(count = blocked.size, totalSaved = totalSaved)
+                SummaryCard(count = model.displayedBlockedCount, totalSaved = totalSaved)
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = "All blocked transfers",
