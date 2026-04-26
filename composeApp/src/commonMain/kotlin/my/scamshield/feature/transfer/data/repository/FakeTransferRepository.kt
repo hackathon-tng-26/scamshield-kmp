@@ -30,14 +30,28 @@ class FakeTransferRepository : TransferRepository {
 
     override suspend fun executeTransfer(transaction: Transaction): Result<String> {
         delay(200L)
-        return Result.success("fake-tx-${Clock.System.now().toEpochMilliseconds()}")
+        return Result.success(generateTxRef())
+    }
+
+    private fun generateTxRef(): String {
+        val now = Clock.System.now().toEpochMilliseconds()
+        val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        fun chunk(seed: Long): String = buildString {
+            var s = seed and 0x7FFFFFFFFFFFFFFFL
+            repeat(4) {
+                append(chars[(s % chars.length).toInt()])
+                s /= chars.length
+            }
+        }
+        return "TNG-2026-${chunk(now)}-${chunk(now shr 20)}"
     }
 
     private fun scoreFor(tx: Transaction): Int {
         val phone = tx.recipient.phone
         return when {
             phone.contains("8712") -> 87
-            phone.contains("4001") -> 91
+            phone.contains("0022") -> 55
+            phone.contains("6789") -> 18
             tx.recipient.isInContacts -> (15..25).random()
             tx.amount >= 1_000.0 -> (55..65).random()
             else -> (18..30).random()
@@ -76,10 +90,10 @@ class FakeTransferRepository : TransferRepository {
             "Amount above your usual range",
         )
         Verdict.RED -> listOf(
-            "19 users transferred to this number in the last 2 hours",
-            "7 of them later reported it as a scam",
-            "Account created 3 days ago",
-            "Matches mule-account pattern MP-047",
+            "7 other people reported this number as a scam this week",
+            "This account behaves like a mule — money comes in from many people and leaves within minutes",
+            "Account was opened only 3 days ago",
+            "19 people sent money to this number in the last 2 hours",
         )
     }
 }

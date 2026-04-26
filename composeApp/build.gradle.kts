@@ -81,6 +81,8 @@ kotlin {
 
             implementation(libs.kermit)
             implementation(libs.compose.material.icons.extended)
+
+            implementation("io.github.alexzhirkevich:compottie:2.1.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
