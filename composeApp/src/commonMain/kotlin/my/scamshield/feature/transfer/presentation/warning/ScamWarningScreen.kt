@@ -1,5 +1,13 @@
 package my.scamshield.feature.transfer.presentation.warning
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +18,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -38,14 +47,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
 import my.scamshield.core.presentation.component.LocaleToggle
+import my.scamshield.core.presentation.component.orbitingTraceBorder
 import my.scamshield.core.presentation.i18n.localeText
 import my.scamshield.core.presentation.theme.AlertRed
 import my.scamshield.core.presentation.theme.AlertRedBg
@@ -119,99 +132,168 @@ class ScamWarningScreen(
 
                     Spacer(Modifier.weight(1f))
 
-                    Button(
-                        onClick = {
-                            activityFeed.recordBlocked(transaction, "Akaun keldai")
-                            navigator.popUntil { it is HomeScreen }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(64.dp),
-                    ) {
-                        Text(
-                            text = localeText(
-                                bm = "Ya, batalkan — saya tak kenal",
-                                en = "Yes, cancel — I don't know them",
-                            ),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    OutlinedButton(
-                        onClick = { caller.dial("997") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AlertRed),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = null,
-                            modifier = Modifier.height(20.dp),
-                        )
-                        Spacer(Modifier.padding(horizontal = 4.dp))
-                        Text(
-                            text = localeText(
-                                bm = "Hubungi NSRC 997",
-                                en = "Call NSRC 997",
-                            ),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    OutlinedButton(
-                        onClick = {
-                            activityFeed.recordHeld(transaction)
-                            navigator.popUntil { it is HomeScreen }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = WarnOrange),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            modifier = Modifier.height(20.dp),
-                        )
-                        Spacer(Modifier.padding(horizontal = 4.dp))
-                        Text(
-                            text = localeText(
-                                bm = "Tahan 24 jam — saya semak dulu",
-                                en = "Hold for 24h — let me check first",
-                            ),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                    val bypassEnabled = coolingSecondsLeft == 0
-                    TextButton(
-                        onClick = { showBypassSheet = true },
-                        enabled = bypassEnabled,
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                    ) {
-                        val alpha = if (bypassEnabled) 0.5f else 0.3f
-                        val labelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = alpha)
-                        val label = if (bypassEnabled) {
-                            localeText(
-                                bm = "Saya masih nak teruskan",
-                                en = "I still want to proceed",
-                            )
-                        } else {
-                            localeText(
-                                bm = "Saya masih nak teruskan (tunggu ${coolingSecondsLeft}s)",
-                                en = "I still want to proceed (wait ${coolingSecondsLeft}s)",
+                    val actionsSlideDp = remember { Animatable(BUTTON_GROUP_SLIDE_OFFSET_DP.toFloat()) }
+                    val actionsAlpha = remember { Animatable(0f) }
+                    LaunchedEffect(Unit) {
+                        launch {
+                            actionsSlideDp.animateTo(
+                                targetValue = 0f,
+                                animationSpec = tween(
+                                    durationMillis = BUTTON_GROUP_INTRO_MILLIS,
+                                    delayMillis = BUTTON_GROUP_INTRO_DELAY_MILLIS,
+                                    easing = FastOutSlowInEasing,
+                                ),
                             )
                         }
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = labelColor,
-                            fontWeight = FontWeight.Medium,
-                        )
+                        launch {
+                            actionsAlpha.animateTo(
+                                targetValue = 1f,
+                                animationSpec = tween(
+                                    durationMillis = BUTTON_GROUP_INTRO_MILLIS,
+                                    delayMillis = BUTTON_GROUP_INTRO_DELAY_MILLIS,
+                                    easing = FastOutSlowInEasing,
+                                ),
+                            )
+                        }
+                    }
+                    val cancelPulse = rememberInfiniteTransition(label = "cancelButtonPulse")
+                    val cancelScale by cancelPulse.animateFloat(
+                        initialValue = 1f,
+                        targetValue = CANCEL_BUTTON_PULSE_SCALE,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(
+                                durationMillis = CANCEL_BUTTON_PULSE_HALF_MILLIS,
+                                easing = FastOutSlowInEasing,
+                            ),
+                            repeatMode = RepeatMode.Reverse,
+                        ),
+                        label = "cancelButtonScale",
+                    )
+                    val cancelBorderHead by cancelPulse.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(
+                                durationMillis = CANCEL_BORDER_ORBIT_MILLIS,
+                                easing = LinearEasing,
+                            ),
+                            repeatMode = RepeatMode.Restart,
+                        ),
+                        label = "cancelBorderOrbit",
+                    )
+                    val cancelButtonShape = RoundedCornerShape(20.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .alpha(actionsAlpha.value)
+                            .offset { IntOffset(0, actionsSlideDp.value.dp.roundToPx()) },
+                    ) {
+                        Button(
+                            onClick = {
+                                activityFeed.recordBlocked(transaction, "Akaun keldai")
+                                navigator.popUntil { it is HomeScreen }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
+                            shape = cancelButtonShape,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp)
+                                .graphicsLayer {
+                                    scaleX = cancelScale
+                                    scaleY = cancelScale
+                                }
+                                .orbitingTraceBorder(
+                                    headFraction = cancelBorderHead,
+                                    tailLengthFraction = CANCEL_BORDER_TAIL_FRACTION,
+                                    color = Color.White,
+                                    width = 2.dp,
+                                    shape = cancelButtonShape,
+                                ),
+                        ) {
+                            Text(
+                                text = localeText(
+                                    bm = "Ya, batalkan — saya tak kenal",
+                                    en = "Yes, cancel — I don't know them",
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = { caller.dial("997") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = AlertRed),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = null,
+                                modifier = Modifier.height(20.dp),
+                            )
+                            Spacer(Modifier.padding(horizontal = 4.dp))
+                            Text(
+                                text = localeText(
+                                    bm = "Hubungi NSRC 997",
+                                    en = "Call NSRC 997",
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = {
+                                activityFeed.recordHeld(transaction)
+                                navigator.popUntil { it is HomeScreen }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = WarnOrange),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = null,
+                                modifier = Modifier.height(20.dp),
+                            )
+                            Spacer(Modifier.padding(horizontal = 4.dp))
+                            Text(
+                                text = localeText(
+                                    bm = "Tahan 24 jam — saya semak dulu",
+                                    en = "Hold for 24h — let me check first",
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                        val bypassEnabled = coolingSecondsLeft == 0
+                        TextButton(
+                            onClick = { showBypassSheet = true },
+                            enabled = bypassEnabled,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        ) {
+                            val labelAlpha = if (bypassEnabled) 0.5f else 0.3f
+                            val labelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = labelAlpha)
+                            val label = if (bypassEnabled) {
+                                localeText(
+                                    bm = "Saya masih nak teruskan",
+                                    en = "I still want to proceed",
+                                )
+                            } else {
+                                localeText(
+                                    bm = "Saya masih nak teruskan (tunggu ${coolingSecondsLeft}s)",
+                                    en = "I still want to proceed (wait ${coolingSecondsLeft}s)",
+                                )
+                            }
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = labelColor,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
                 }
             }
@@ -239,6 +321,13 @@ class ScamWarningScreen(
 
     companion object {
         private const val BYPASS_COOLING_SEC = 30
+        private const val BUTTON_GROUP_SLIDE_OFFSET_DP = 56
+        private const val BUTTON_GROUP_INTRO_MILLIS = 600
+        private const val BUTTON_GROUP_INTRO_DELAY_MILLIS = 180
+        private const val CANCEL_BUTTON_PULSE_SCALE = 1.035f
+        private const val CANCEL_BUTTON_PULSE_HALF_MILLIS = 1_200
+        private const val CANCEL_BORDER_ORBIT_MILLIS = 2_400
+        private const val CANCEL_BORDER_TAIL_FRACTION = 0.32f
     }
 }
 

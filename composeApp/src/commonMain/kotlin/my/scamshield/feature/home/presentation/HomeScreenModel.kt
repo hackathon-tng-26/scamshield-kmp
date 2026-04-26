@@ -14,6 +14,9 @@ class HomeScreenModel(
     val activity: StateFlow<List<ActivityItem>> = activityFeed.items
     val balanceRm: Double = WALLET_BALANCE_RM
 
+    val displayedBlockedCount: Int = SCAMS_BLOCKED_THIS_MONTH
+    val displayedAmountSavedRm: Double = AMOUNT_SAVED_THIS_MONTH_RM
+
     private val _hasPlayedScamShieldEntry = MutableStateFlow(false)
     val hasPlayedScamShieldEntry: StateFlow<Boolean> = _hasPlayedScamShieldEntry.asStateFlow()
 
@@ -39,5 +42,10 @@ class HomeScreenModel(
         if (!_introducedActivityIds.value.contains(id)) {
             _introducedActivityIds.value = _introducedActivityIds.value + id
         }
+    }
+
+    private companion object {
+        const val SCAMS_BLOCKED_THIS_MONTH = 120
+        const val AMOUNT_SAVED_THIS_MONTH_RM = 142_890.0
     }
 }
