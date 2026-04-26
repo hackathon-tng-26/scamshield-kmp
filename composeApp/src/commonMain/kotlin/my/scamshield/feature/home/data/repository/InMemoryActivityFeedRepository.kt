@@ -96,10 +96,10 @@ class InMemoryActivityFeedRepository(
         return buildList {
             add(
                 ActivityItem(
-                    id = "seed-sent-mum",
+                    id = "seed-sent-siti",
                     kind = ActivityKind.SENT,
-                    title = "Sent to Mum",
-                    subtitle = "+60 12-987 6543",
+                    title = "Sent to Siti",
+                    subtitle = "+60 12-345 6789",
                     amount = 200.0,
                     timestamp = now - 3.days,
                 )

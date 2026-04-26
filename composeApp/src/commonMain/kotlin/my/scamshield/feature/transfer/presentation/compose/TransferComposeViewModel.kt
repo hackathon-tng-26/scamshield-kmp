@@ -24,10 +24,10 @@ class TransferComposeViewModel : ScreenModel {
     val state: StateFlow<TransferComposeUiState> = _state.asStateFlow()
 
     val contacts: List<MockContact> = listOf(
-        MockContact("Mum",      "+60 12-987 6543", 50.0,   "AISYAH BINTI HAMID",   TrustLevel.GREEN),
-        MockContact("Brother",  "+60 11-234 5678", 100.0,  "AHMAD HAFIZ BIN OMAR", TrustLevel.GREEN),
-        MockContact("Landlord", "+60 17-555 1234", 1200.0, "TAN CHEE WEI",         TrustLevel.GREEN),
-        MockContact("John",     "+60 13-7842 4421", 2000.0, "MOHD ALIF BIN RAZAK", TrustLevel.RED),
+        MockContact("Siti",     "+60 12-345 6789",  50.0,   "SITI AMINAH BINTI HASSAN", TrustLevel.GREEN),
+        MockContact("Brother",  "+60 11-234 5678",  100.0,  "AHMAD HAFIZ BIN OMAR",     TrustLevel.GREEN),
+        MockContact("Landlord", "+60 17-555 1234",  1200.0, "TAN CHEE WEI",             TrustLevel.GREEN),
+        MockContact("John",     "+60 11-XXXX 8712", 2000.0, "MOHD ALIF BIN RAZAK",      TrustLevel.RED),
     )
 
     private var resolveJob: Job? = null

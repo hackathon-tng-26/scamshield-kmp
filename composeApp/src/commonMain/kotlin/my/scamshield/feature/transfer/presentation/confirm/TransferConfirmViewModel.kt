@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import my.scamshield.core.domain.util.Logger
+import my.scamshield.feature.transfer.di.DEMO_FALLBACK_ON_EXECUTE_FAILURE
 import my.scamshield.feature.transfer.domain.model.Transaction
 import my.scamshield.feature.transfer.domain.usecase.ExecuteTransferUseCase
 import my.scamshield.feature.transfer.domain.usecase.ScoreTransferUseCase
@@ -47,9 +48,20 @@ class TransferConfirmViewModel(
                     onSent(txId)
                 }
                 .onFailure { error ->
-                    _state.update { it.copy(isSending = false, errorMessage = error.message) }
+                    if (DEMO_FALLBACK_ON_EXECUTE_FAILURE) {
+                        logger.error("Execute failed, demo fallback engaged: ${error.message}", TAG, error)
+                        _state.update { it.copy(isSending = false) }
+                        onSent(synthesizeDemoTxId(tx))
+                    } else {
+                        _state.update { it.copy(isSending = false, errorMessage = error.message) }
+                    }
                 }
         }
+    }
+
+    private fun synthesizeDemoTxId(tx: Transaction): String {
+        val tail = tx.recipient.phone.filter { it.isDigit() }.takeLast(4).ifEmpty { "0000" }
+        return "TNG-2026-DEMO-$tail"
     }
 
     companion object {
